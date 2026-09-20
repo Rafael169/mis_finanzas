@@ -1,56 +1,150 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
-import '../../../core/domain/currency.dart';
-import '../../../core/domain/money.dart';
+import '../../../app/theme/app_colors.dart';
+import '../../periods/presentation/period_providers.dart';
+import '../../periods/presentation/selected_period_provider.dart';
 import 'settings_providers.dart';
 
-/// Pantalla TEMPORAL para verificar que la base de datos funciona en el
-/// dispositivo. Se elimina cuando exista la pantalla real de Inicio.
+/// Inicio TEMPORAL: muestra el resumen del mes para comprobar que los
+/// movimientos se guardan. Se reemplaza por la pantalla real de Inicio.
 class DbCheckPage extends ConsumerWidget {
   const DbCheckPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(userSettingsProvider);
+    final theme = Theme.of(context);
+    final month = ref.watch(selectedPeriodProvider);
+    final notifier = ref.read(selectedPeriodProvider.notifier);
+    final summary = ref.watch(periodSummaryProvider);
     final format = ref.watch(moneyFormatterProvider);
-    final textTheme = Theme.of(context).textTheme;
+    final currency = ref.watch(currencyProvider);
+
+    final rawLabel = DateFormat('MMMM yyyy', 'es_CO').format(month.firstDay);
+    final label = toBeginningOfSentenceCase(rawLabel) ?? rawLabel;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Verificación de base de datos')),
-      body: settings.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Error: $error')),
-        data: (data) => ListView(
-          padding: const EdgeInsets.all(24),
-          children: [
-            Text(
-              'Moneda guardada: ${data.currencyCode}',
-              style: textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              format(const Money.fromUnits(1169841)),
-              style: textTheme.displaySmall,
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Cambia la moneda, cierra la app por completo y vuelve a '
-              'abrirla. Debe recordar tu elección.',
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
+      appBar: AppBar(title: const Text('Inicio (temporal)')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Row(
+            children: [
+              IconButton(
+                onPressed: notifier.previous,
+                icon: const Icon(Icons.chevron_left),
+              ),
+              Expanded(
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleLarge,
+                ),
+              ),
+              IconButton(
+                onPressed: notifier.next,
+                icon: const Icon(Icons.chevron_right),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          summary.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, _) => Text('Error: $error'),
+            data: (s) => Column(
               children: [
-                for (final currency in Currency.supported)
-                  ChoiceChip(
-                    label: Text(currency.code),
-                    selected: data.currencyCode == currency.code,
-                    onSelected: (_) => ref
-                        .read(settingsRepositoryProvider)
-                        .save(data.copyWith(currencyCode: currency.code)),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        Text('Balance del mes', style: theme.textTheme.titleMedium),
+                        const SizedBox(height: 8),
+                        Text(
+                          format(s.balance),
+                          style: theme.textTheme.displaySmall,
+                        ),
+                      ],
+                    ),
                   ),
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _SummaryCard(
+                        title: 'Ingresos',
+                        value: format(s.income),
+                        color: AppColors.income,
+                      ),
+                    ),
+                    Expanded(
+                      child: _SummaryCard(
+                        title: 'Gastos',
+                        value: format(s.expense),
+                        color: AppColors.expense,
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _SummaryCard(
+                        title: 'Ingresos adicionales',
+                        value: format(s.extraIncome),
+                        color: AppColors.income,
+                      ),
+                    ),
+                    Expanded(
+                      child: _SummaryCard(
+                        title: 'Gasto hormiga',
+                        value: format(s.antExpense),
+                        color: AppColors.warning,
+                      ),
+                    ),
+                  ],
+                ),
               ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Moneda: ${currency.code} · ${currency.name}',
+            style: theme.textTheme.bodySmall,
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SummaryCard extends StatelessWidget {
+  const _SummaryCard({
+    required this.title,
+    required this.value,
+    required this.color,
+  });
+
+  final String title;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: theme.textTheme.bodySmall),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: theme.textTheme.titleMedium?.copyWith(color: color),
             ),
           ],
         ),
