@@ -1,15 +1,11 @@
 import 'package:intl/intl.dart';
 
 import '../domain/currency.dart';
+import '../domain/money.dart';
 
-/// Los montos se guardan siempre como entero con 2 decimales implícitos
-/// ("centavos"), sin importar la moneda. Así cambiar de moneda nunca
-/// reinterpreta los datos guardados.
-const int kStorageScale = 100;
-
-/// Convierte un monto guardado en "centavos" a texto para mostrar.
-String formatMinorUnits(
-  int minorUnits, {
+/// Convierte un [Money] a texto según la moneda y el idioma elegidos.
+String formatMoney(
+  Money money, {
   required Currency currency,
   required String locale,
 }) {
@@ -18,5 +14,5 @@ String formatMinorUnits(
     symbol: currency.symbol,
     decimalDigits: currency.displayDecimals,
   );
-  return formatter.format(minorUnits / kStorageScale);
+  return formatter.format(money.minorUnits / Money.scale);
 }
