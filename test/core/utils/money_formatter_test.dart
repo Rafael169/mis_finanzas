@@ -8,40 +8,36 @@ void main() {
   // prueba no dependa de cómo intl separa el símbolo del número.
   String clean(String text) => text.replaceAll(RegExp(r'\s'), '');
 
-  test('COP en es_CO: separador de miles y sin decimales', () {
-    final text = clean(
-      formatMoney(
-        const Money.fromUnits(1169841),
-        currency: Currency.cop,
-        locale: 'es_CO',
-      ),
-    );
-    expect(text, contains('1.169.841'));
-    expect(text, contains(r'$'));
-    expect(text, isNot(contains(',')));
+  String format(Money money, Currency currency) =>
+      clean(formatMoney(money, currency: currency, locale: 'es_CO'));
+
+  test('COP: 1200 pesos se ve exactamente así', () {
+    expect(format(const Money.fromUnits(1200), Currency.cop), r'$1.200');
   });
 
-  test('USD en es_CO: dos decimales con coma', () {
-    final text = clean(
-      formatMoney(
-        const Money.fromMinor(123456),
-        currency: Currency.usd,
-        locale: 'es_CO',
-      ),
-    );
-    expect(text, contains('1.234,56'));
-    expect(text, contains('US'));
+  test('COP: monto grande con puntos de miles y sin decimales', () {
+    expect(format(const Money.fromUnits(1169841), Currency.cop), r'$1.169.841');
   });
 
-  test('el mismo monto guardado se ve distinto según la moneda', () {
-    const stored = Money.fromMinor(5000000);
-    final cop = clean(
-      formatMoney(stored, currency: Currency.cop, locale: 'es_CO'),
+  test('USD entero: 10 dólares sin decimales', () {
+    expect(format(const Money.fromUnits(10), Currency.usd), r'US$10');
+  });
+
+  test('USD con centavos: muestra dos decimales', () {
+    expect(format(const Money.fromMinor(1050), Currency.usd), r'US$10,50');
+    expect(format(const Money.fromMinor(123456), Currency.usd), r'US$1.234,56');
+  });
+
+  test('ARS entero: sin decimales', () {
+    expect(
+      format(const Money.fromUnits(1169841), Currency.ars),
+      r'AR$1.169.841',
     );
-    final usd = clean(
-      formatMoney(stored, currency: Currency.usd, locale: 'es_CO'),
-    );
-    expect(cop, contains('50.000'));
-    expect(usd, contains('50.000,00'));
+  });
+
+  test('un monto negativo lleva el signo menos', () {
+    final text = format(-const Money.fromUnits(1500), Currency.cop);
+    expect(text, contains('-'));
+    expect(text, contains('1.500'));
   });
 }
