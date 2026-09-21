@@ -22,14 +22,24 @@ class AppDatabase extends _$AppDatabase {
   /// Para pruebas: recibe un ejecutor (por ejemplo, una base en memoria).
   AppDatabase.forTesting(super.e);
 
+  /// Versión del esquema. Sube en 1 cada vez que cambian las tablas y
+  /// siempre con su migración en [migration].
+  ///
+  /// - 1: versión inicial.
+  /// - 2: tema de la app (columna `themeMode` en los ajustes).
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-    beforeOpen: (details) async {
-      // SQLite no hace cumplir las claves foráneas si no se activan.
-      await customStatement('PRAGMA foreign_keys = ON');
-    },
-  );
+        onUpgrade: (migrator, from, to) async {
+          if (from < 2) {
+            await migrator.addColumn(appSettings, appSettings.themeMode);
+          }
+        },
+        beforeOpen: (details) async {
+          // SQLite no hace cumplir las claves foráneas si no se activan.
+          await customStatement('PRAGMA foreign_keys = ON');
+        },
+      );
 }

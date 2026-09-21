@@ -6,6 +6,7 @@ import '../../core/widgets/placeholder_page.dart';
 import '../../features/onboarding/presentation/onboarding_page.dart';
 import '../../features/onboarding/presentation/splash_page.dart';
 import '../../features/settings/presentation/db_check_page.dart';
+import '../../features/settings/presentation/profile_page.dart';
 import '../../features/settings/presentation/settings_providers.dart';
 import '../../features/transactions/presentation/edit_transaction_page.dart';
 import '../../features/transactions/presentation/movements_page.dart';
@@ -96,10 +97,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/perfil',
-                builder: (context, state) => const PlaceholderPage(
-                  title: 'Perfil',
-                  icon: Icons.person_outline,
-                ),
+                builder: (context, state) => const ProfilePage(),
               ),
             ],
           ),

@@ -75,14 +75,14 @@ class DbCheckPage extends ConsumerWidget {
                       child: _SummaryCard(
                         title: 'Ingresos',
                         value: format(s.income),
-                        color: AppColors.income,
+                        color: context.appColors.income,
                       ),
                     ),
                     Expanded(
                       child: _SummaryCard(
                         title: 'Gastos',
                         value: format(s.expense),
-                        color: AppColors.expense,
+                        color: context.appColors.expense,
                       ),
                     ),
                   ],
@@ -93,14 +93,14 @@ class DbCheckPage extends ConsumerWidget {
                       child: _SummaryCard(
                         title: 'Ingresos adicionales',
                         value: format(s.extraIncome),
-                        color: AppColors.income,
+                        color: context.appColors.income,
                       ),
                     ),
                     Expanded(
                       child: _SummaryCard(
                         title: 'Gasto hormiga',
                         value: format(s.antExpense),
-                        color: AppColors.warning,
+                        color: context.appColors.warning,
                       ),
                     ),
                   ],

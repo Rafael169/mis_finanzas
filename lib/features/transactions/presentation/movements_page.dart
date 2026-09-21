@@ -230,14 +230,14 @@ class _MovementList extends ConsumerWidget {
                 child: _TotalCell(
                   label: 'Ingresos',
                   value: format(totals.income),
-                  color: AppColors.income,
+                  color: context.appColors.income,
                 ),
               ),
               Expanded(
                 child: _TotalCell(
                   label: 'Gastos',
                   value: format(totals.expense),
-                  color: AppColors.expense,
+                  color: context.appColors.expense,
                 ),
               ),
             ],
@@ -351,7 +351,7 @@ class _MovementTile extends StatelessWidget {
       subtitle = 'Gasto hormiga';
     }
 
-    final amountColor = item.isIncome ? AppColors.income : AppColors.expense;
+    final amountColor = item.isIncome ? context.appColors.income : context.appColors.expense;
     final sign = item.isIncome ? '+' : '-';
 
     return ListTile(

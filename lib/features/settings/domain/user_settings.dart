@@ -1,4 +1,5 @@
 import '../../../core/domain/currency.dart';
+import 'app_theme_mode.dart';
 
 /// Ajustes del usuario. Una sola moneda para toda la app.
 class UserSettings {
@@ -8,6 +9,7 @@ class UserSettings {
     required this.defaultAlertPercent,
     required this.notificationsEnabled,
     required this.onboardingCompleted,
+    required this.themeMode,
   });
 
   /// Valores que se usan mientras no haya nada guardado.
@@ -17,6 +19,7 @@ class UserSettings {
     defaultAlertPercent: 80,
     notificationsEnabled: false,
     onboardingCompleted: false,
+    themeMode: AppThemeMode.system,
   );
 
   final String currencyCode;
@@ -24,6 +27,7 @@ class UserSettings {
   final int defaultAlertPercent;
   final bool notificationsEnabled;
   final bool onboardingCompleted;
+  final AppThemeMode themeMode;
 
   Currency get currency => Currency.fromCode(currencyCode);
 
@@ -33,6 +37,7 @@ class UserSettings {
     int? defaultAlertPercent,
     bool? notificationsEnabled,
     bool? onboardingCompleted,
+    AppThemeMode? themeMode,
   }) {
     return UserSettings(
       currencyCode: currencyCode ?? this.currencyCode,
@@ -40,6 +45,7 @@ class UserSettings {
       defaultAlertPercent: defaultAlertPercent ?? this.defaultAlertPercent,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
+      themeMode: themeMode ?? this.themeMode,
     );
   }
 }

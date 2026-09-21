@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/database_provider.dart';
@@ -5,6 +6,7 @@ import '../../../core/domain/currency.dart';
 import '../../../core/domain/money.dart';
 import '../../../core/utils/money_formatter.dart';
 import '../data/drift_settings_repository.dart';
+import '../domain/app_theme_mode.dart';
 import '../domain/settings_repository.dart';
 import '../domain/user_settings.dart';
 
@@ -30,9 +32,17 @@ final currencyProvider = Provider<Currency>((ref) {
 final moneyFormatterProvider = Provider<String Function(Money)>((ref) {
   final settings =
       ref.watch(userSettingsProvider).value ?? UserSettings.defaults;
-  return (money) => formatMoney(
-        money,
-        currency: settings.currency,
-        locale: settings.locale,
-      );
+  return (money) =>
+      formatMoney(money, currency: settings.currency, locale: settings.locale);
+});
+
+/// Modo de tema que usa la app (Sistema, Claro u Oscuro).
+final themeModeProvider = Provider<ThemeMode>((ref) {
+  final settings =
+      ref.watch(userSettingsProvider).value ?? UserSettings.defaults;
+  return switch (settings.themeMode) {
+    AppThemeMode.system => ThemeMode.system,
+    AppThemeMode.light => ThemeMode.light,
+    AppThemeMode.dark => ThemeMode.dark,
+  };
 });

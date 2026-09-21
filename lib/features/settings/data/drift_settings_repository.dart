@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../../../core/database/app_database.dart';
+import '../domain/app_theme_mode.dart';
 import '../domain/settings_repository.dart';
 import '../domain/user_settings.dart';
 
@@ -36,6 +37,7 @@ class DriftSettingsRepository implements SettingsRepository {
             defaultAlertPercent: Value(settings.defaultAlertPercent),
             notificationsEnabled: Value(settings.notificationsEnabled),
             onboardingCompleted: Value(settings.onboardingCompleted),
+            themeMode: Value(settings.themeMode.name),
             createdAt: Value(existing?.createdAt ?? now),
             updatedAt: Value(now),
           ),
@@ -50,6 +52,7 @@ class DriftSettingsRepository implements SettingsRepository {
       defaultAlertPercent: row.defaultAlertPercent,
       notificationsEnabled: row.notificationsEnabled,
       onboardingCompleted: row.onboardingCompleted,
+      themeMode: AppThemeMode.fromName(row.themeMode),
     );
   }
 }

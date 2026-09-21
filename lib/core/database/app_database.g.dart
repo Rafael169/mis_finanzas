@@ -94,6 +94,18 @@ class $AppSettingsTable extends AppSettings
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _themeModeMeta = const VerificationMeta(
+    'themeMode',
+  );
+  @override
+  late final GeneratedColumn<String> themeMode = GeneratedColumn<String>(
+    'theme_mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('system'),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -125,6 +137,7 @@ class $AppSettingsTable extends AppSettings
     defaultAlertPercent,
     notificationsEnabled,
     onboardingCompleted,
+    themeMode,
     createdAt,
     updatedAt,
   ];
@@ -196,6 +209,12 @@ class $AppSettingsTable extends AppSettings
         ),
       );
     }
+    if (data.containsKey('theme_mode')) {
+      context.handle(
+        _themeModeMeta,
+        themeMode.isAcceptableOrUnknown(data['theme_mode']!, _themeModeMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -249,6 +268,10 @@ class $AppSettingsTable extends AppSettings
         DriftSqlType.bool,
         data['${effectivePrefix}onboarding_completed'],
       )!,
+      themeMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}theme_mode'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -274,6 +297,9 @@ class AppSettingsData extends DataClass implements Insertable<AppSettingsData> {
   final int defaultAlertPercent;
   final bool notificationsEnabled;
   final bool onboardingCompleted;
+
+  /// Tema de la app: 'system', 'light' o 'dark'.
+  final String themeMode;
   final DateTime createdAt;
   final DateTime updatedAt;
   const AppSettingsData({
@@ -284,6 +310,7 @@ class AppSettingsData extends DataClass implements Insertable<AppSettingsData> {
     required this.defaultAlertPercent,
     required this.notificationsEnabled,
     required this.onboardingCompleted,
+    required this.themeMode,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -299,6 +326,7 @@ class AppSettingsData extends DataClass implements Insertable<AppSettingsData> {
     map['default_alert_percent'] = Variable<int>(defaultAlertPercent);
     map['notifications_enabled'] = Variable<bool>(notificationsEnabled);
     map['onboarding_completed'] = Variable<bool>(onboardingCompleted);
+    map['theme_mode'] = Variable<String>(themeMode);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -315,6 +343,7 @@ class AppSettingsData extends DataClass implements Insertable<AppSettingsData> {
       defaultAlertPercent: Value(defaultAlertPercent),
       notificationsEnabled: Value(notificationsEnabled),
       onboardingCompleted: Value(onboardingCompleted),
+      themeMode: Value(themeMode),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -339,6 +368,7 @@ class AppSettingsData extends DataClass implements Insertable<AppSettingsData> {
       onboardingCompleted: serializer.fromJson<bool>(
         json['onboardingCompleted'],
       ),
+      themeMode: serializer.fromJson<String>(json['themeMode']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -354,6 +384,7 @@ class AppSettingsData extends DataClass implements Insertable<AppSettingsData> {
       'defaultAlertPercent': serializer.toJson<int>(defaultAlertPercent),
       'notificationsEnabled': serializer.toJson<bool>(notificationsEnabled),
       'onboardingCompleted': serializer.toJson<bool>(onboardingCompleted),
+      'themeMode': serializer.toJson<String>(themeMode),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -367,6 +398,7 @@ class AppSettingsData extends DataClass implements Insertable<AppSettingsData> {
     int? defaultAlertPercent,
     bool? notificationsEnabled,
     bool? onboardingCompleted,
+    String? themeMode,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => AppSettingsData(
@@ -377,6 +409,7 @@ class AppSettingsData extends DataClass implements Insertable<AppSettingsData> {
     defaultAlertPercent: defaultAlertPercent ?? this.defaultAlertPercent,
     notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
     onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
+    themeMode: themeMode ?? this.themeMode,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -399,6 +432,7 @@ class AppSettingsData extends DataClass implements Insertable<AppSettingsData> {
       onboardingCompleted: data.onboardingCompleted.present
           ? data.onboardingCompleted.value
           : this.onboardingCompleted,
+      themeMode: data.themeMode.present ? data.themeMode.value : this.themeMode,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -414,6 +448,7 @@ class AppSettingsData extends DataClass implements Insertable<AppSettingsData> {
           ..write('defaultAlertPercent: $defaultAlertPercent, ')
           ..write('notificationsEnabled: $notificationsEnabled, ')
           ..write('onboardingCompleted: $onboardingCompleted, ')
+          ..write('themeMode: $themeMode, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -429,6 +464,7 @@ class AppSettingsData extends DataClass implements Insertable<AppSettingsData> {
     defaultAlertPercent,
     notificationsEnabled,
     onboardingCompleted,
+    themeMode,
     createdAt,
     updatedAt,
   );
@@ -443,6 +479,7 @@ class AppSettingsData extends DataClass implements Insertable<AppSettingsData> {
           other.defaultAlertPercent == this.defaultAlertPercent &&
           other.notificationsEnabled == this.notificationsEnabled &&
           other.onboardingCompleted == this.onboardingCompleted &&
+          other.themeMode == this.themeMode &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -455,6 +492,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingsData> {
   final Value<int> defaultAlertPercent;
   final Value<bool> notificationsEnabled;
   final Value<bool> onboardingCompleted;
+  final Value<String> themeMode;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -466,6 +504,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingsData> {
     this.defaultAlertPercent = const Value.absent(),
     this.notificationsEnabled = const Value.absent(),
     this.onboardingCompleted = const Value.absent(),
+    this.themeMode = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -478,6 +517,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingsData> {
     this.defaultAlertPercent = const Value.absent(),
     this.notificationsEnabled = const Value.absent(),
     this.onboardingCompleted = const Value.absent(),
+    this.themeMode = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -492,6 +532,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingsData> {
     Expression<int>? defaultAlertPercent,
     Expression<bool>? notificationsEnabled,
     Expression<bool>? onboardingCompleted,
+    Expression<String>? themeMode,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -507,6 +548,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingsData> {
         'notifications_enabled': notificationsEnabled,
       if (onboardingCompleted != null)
         'onboarding_completed': onboardingCompleted,
+      if (themeMode != null) 'theme_mode': themeMode,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -521,6 +563,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingsData> {
     Value<int>? defaultAlertPercent,
     Value<bool>? notificationsEnabled,
     Value<bool>? onboardingCompleted,
+    Value<String>? themeMode,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -533,6 +576,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingsData> {
       defaultAlertPercent: defaultAlertPercent ?? this.defaultAlertPercent,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
+      themeMode: themeMode ?? this.themeMode,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -563,6 +607,9 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingsData> {
     if (onboardingCompleted.present) {
       map['onboarding_completed'] = Variable<bool>(onboardingCompleted.value);
     }
+    if (themeMode.present) {
+      map['theme_mode'] = Variable<String>(themeMode.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -585,6 +632,7 @@ class AppSettingsCompanion extends UpdateCompanion<AppSettingsData> {
           ..write('defaultAlertPercent: $defaultAlertPercent, ')
           ..write('notificationsEnabled: $notificationsEnabled, ')
           ..write('onboardingCompleted: $onboardingCompleted, ')
+          ..write('themeMode: $themeMode, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -3950,6 +3998,7 @@ typedef $$AppSettingsTableCreateCompanionBuilder =
       Value<int> defaultAlertPercent,
       Value<bool> notificationsEnabled,
       Value<bool> onboardingCompleted,
+      Value<String> themeMode,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<int> rowid,
@@ -3963,6 +4012,7 @@ typedef $$AppSettingsTableUpdateCompanionBuilder =
       Value<int> defaultAlertPercent,
       Value<bool> notificationsEnabled,
       Value<bool> onboardingCompleted,
+      Value<String> themeMode,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -4009,6 +4059,11 @@ class $$AppSettingsTableFilterComposer
 
   ColumnFilters<bool> get onboardingCompleted => $composableBuilder(
     column: $table.onboardingCompleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get themeMode => $composableBuilder(
+    column: $table.themeMode,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4067,6 +4122,11 @@ class $$AppSettingsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get themeMode => $composableBuilder(
+    column: $table.themeMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -4118,6 +4178,9 @@ class $$AppSettingsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get themeMode =>
+      $composableBuilder(column: $table.themeMode, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -4163,6 +4226,7 @@ class $$AppSettingsTableTableManager
                 Value<int> defaultAlertPercent = const Value.absent(),
                 Value<bool> notificationsEnabled = const Value.absent(),
                 Value<bool> onboardingCompleted = const Value.absent(),
+                Value<String> themeMode = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -4174,6 +4238,7 @@ class $$AppSettingsTableTableManager
                 defaultAlertPercent: defaultAlertPercent,
                 notificationsEnabled: notificationsEnabled,
                 onboardingCompleted: onboardingCompleted,
+                themeMode: themeMode,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -4187,6 +4252,7 @@ class $$AppSettingsTableTableManager
                 Value<int> defaultAlertPercent = const Value.absent(),
                 Value<bool> notificationsEnabled = const Value.absent(),
                 Value<bool> onboardingCompleted = const Value.absent(),
+                Value<String> themeMode = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -4198,6 +4264,7 @@ class $$AppSettingsTableTableManager
                 defaultAlertPercent: defaultAlertPercent,
                 notificationsEnabled: notificationsEnabled,
                 onboardingCompleted: onboardingCompleted,
+                themeMode: themeMode,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,

@@ -18,8 +18,12 @@ class AppSettings extends Table {
       boolean().withDefault(const Constant(false))();
   BoolColumn get onboardingCompleted =>
       boolean().withDefault(const Constant(false))();
+      /// Tema de la app: 'system', 'light' o 'dark'.
+  TextColumn get themeMode => text().withDefault(const Constant('system'))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
+
+
 
   @override
   Set<Column> get primaryKey => {id};
