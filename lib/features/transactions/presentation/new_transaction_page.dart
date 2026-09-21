@@ -6,17 +6,22 @@ import 'package:intl/intl.dart';
 
 import '../../../core/domain/cut_rule.dart';
 import '../../../core/domain/money.dart';
+import '../../../core/utils/money_input.dart';
 import '../../../core/utils/money_parser.dart';
 import '../../categories/domain/finance_category.dart';
 import '../../categories/presentation/category_providers.dart';
 import '../../categories/presentation/category_visuals.dart';
 import '../../settings/presentation/settings_providers.dart';
+import '../domain/movement_item.dart';
 import '../domain/register_movement.dart';
 import 'movement_providers.dart';
 
-/// Formulario para registrar un ingreso o un gasto.
+/// Formulario para registrar un ingreso o un gasto, o para editar uno.
 class NewTransactionPage extends ConsumerStatefulWidget {
-  const NewTransactionPage({super.key});
+  const NewTransactionPage({super.key, this.editing});
+
+  /// Si no es null, el formulario edita ese movimiento en lugar de crear uno.
+  final MovementItem? editing;
 
   @override
   ConsumerState<NewTransactionPage> createState() => _NewTransactionPageState();
@@ -28,11 +33,13 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
   final _amountFocus = FocusNode();
 
   bool _isIncome = false;
-  FinanceCategory? _category;
+  String? _categoryId;
   late DateTime _date;
   bool _saving = false;
   String? _amountError;
   String? _categoryError;
+
+  bool get _isEditing => widget.editing != null;
 
   static DateTime _dayOf(DateTime value) =>
       DateTime(value.year, value.month, value.day);
@@ -40,7 +47,19 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
   @override
   void initState() {
     super.initState();
-    _date = _dayOf(DateTime.now());
+    final editing = widget.editing;
+    if (editing == null) {
+      _date = _dayOf(DateTime.now());
+    } else {
+      _isIncome = editing.isIncome;
+      _categoryId = editing.categoryId;
+      _date = _dayOf(editing.date);
+      _descriptionController.text = editing.description;
+      _amountController.text = formatMoneyForInput(
+        editing.amount,
+        ref.read(currencyProvider),
+      );
+    }
   }
 
   @override
@@ -69,7 +88,9 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
     final messenger = ScaffoldMessenger.of(context);
     final currency = ref.read(currencyProvider);
     final amount = parseMoneyInput(_amountController.text, currency);
-    final category = _category;
+    final categories =
+        ref.read(categoriesProvider).value ?? const <FinanceCategory>[];
+    final category = categories.where((c) => c.id == _categoryId).firstOrNull;
 
     if (amount == null || amount <= Money.zero || category == null) {
       setState(() {
@@ -83,12 +104,23 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
 
     setState(() => _saving = true);
     try {
-      await ref.read(registerMovementProvider)(
-        category: category,
-        amount: amount,
-        date: _date,
-        description: _descriptionController.text,
-      );
+      final editing = widget.editing;
+      if (editing == null) {
+        await ref.read(registerMovementProvider)(
+          category: category,
+          amount: amount,
+          date: _date,
+          description: _descriptionController.text,
+        );
+      } else {
+        await ref.read(updateMovementProvider)(
+          id: editing.id,
+          category: category,
+          amount: amount,
+          date: _date,
+          description: _descriptionController.text,
+        );
+      }
       return true;
     } on MovementException catch (e) {
       messenger.showSnackBar(SnackBar(content: Text(e.message)));
@@ -106,20 +138,57 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
   Future<void> _saveAndClose() async {
     final messenger = ScaffoldMessenger.of(context);
     if (!await _save()) return;
-    messenger.showSnackBar(const SnackBar(content: Text('Movimiento guardado')));
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(_isEditing ? 'Cambios guardados' : 'Movimiento guardado'),
+      ),
+    );
     if (mounted) context.pop();
   }
 
   Future<void> _saveAndAddAnother() async {
     final messenger = ScaffoldMessenger.of(context);
     if (!await _save()) return;
-    messenger.showSnackBar(const SnackBar(content: Text('Movimiento guardado')));
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Movimiento guardado')),
+    );
     if (!mounted) return;
     setState(() {
       _amountController.clear();
       _descriptionController.clear();
     });
     _amountFocus.requestFocus();
+  }
+
+  /// Elimina el movimiento que se está editando, con opción de deshacer.
+  Future<void> _delete() async {
+    final editing = widget.editing;
+    if (editing == null) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    final repository = ref.read(movementRepositoryProvider);
+
+    try {
+      await repository.softDelete(editing.id);
+    } catch (_) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('No se pudo eliminar. Intenta de nuevo.')),
+      );
+      return;
+    }
+
+    if (mounted) context.pop();
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: const Text('Movimiento eliminado'),
+          action: SnackBarAction(
+            label: 'Deshacer',
+            onPressed: () => repository.restore(editing.id),
+          ),
+        ),
+      );
   }
 
   @override
@@ -130,19 +199,28 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
     final categories = ref.watch(categoriesProvider);
 
     final parsed = parseMoneyInput(_amountController.text, currency);
-    final preview =
-        (parsed != null && parsed > Money.zero) ? format(parsed) : null;
+    final preview = (parsed != null && parsed > Money.zero)
+        ? format(parsed)
+        : null;
 
     final today = _dayOf(DateTime.now());
     final yesterday = DateTime(today.year, today.month, today.day - 1);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Nuevo movimiento'),
+        title: Text(_isEditing ? 'Editar movimiento' : 'Nuevo movimiento'),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
         ),
+        actions: [
+          if (_isEditing)
+            IconButton(
+              tooltip: 'Eliminar',
+              icon: const Icon(Icons.delete_outline),
+              onPressed: _saving ? null : _delete,
+            ),
+        ],
       ),
       body: SafeArea(
         child: Center(
@@ -170,7 +248,7 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
                         selected: {_isIncome},
                         onSelectionChanged: (selection) => setState(() {
                           _isIncome = selection.first;
-                          _category = null;
+                          _categoryId = null;
                           _categoryError = null;
                         }),
                       ),
@@ -178,7 +256,7 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
                       TextField(
                         controller: _amountController,
                         focusNode: _amountFocus,
-                        autofocus: true,
+                        autofocus: !_isEditing,
                         keyboardType: TextInputType.numberWithOptions(
                           decimal: currency.displayDecimals > 0,
                         ),
@@ -195,8 +273,9 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
                           prefixText: '${currency.symbol} ',
                           hintText: '0',
                           errorText: _amountError,
-                          helperText:
-                              preview == null ? null : 'Se registrará como $preview',
+                          helperText: preview == null
+                              ? null
+                              : 'Se registrará como $preview',
                         ),
                         onChanged: (_) => setState(() => _amountError = null),
                       ),
@@ -206,12 +285,12 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
                       categories.when(
                         loading: () =>
                             const Center(child: CircularProgressIndicator()),
-                        error: (_, __) => const Text(
-                          'No se pudieron cargar las categorías.',
-                        ),
+                        error: (_, _) =>
+                            const Text('No se pudieron cargar las categorías.'),
                         data: (all) {
-                          final options =
-                              all.where((c) => c.isIncome == _isIncome).toList();
+                          final options = all
+                              .where((c) => c.isIncome == _isIncome)
+                              .toList();
                           return Wrap(
                             spacing: 8,
                             runSpacing: 8,
@@ -224,13 +303,13 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
                                     color: categoryColor(c.colorHex),
                                   ),
                                   label: Text(c.name),
-                                  selected: _category?.id == c.id,
+                                  selected: _categoryId == c.id,
                                   onSelected: _saving
                                       ? null
                                       : (_) => setState(() {
-                                            _category = c;
-                                            _categoryError = null;
-                                          }),
+                                          _categoryId = c.id;
+                                          _categoryError = null;
+                                        }),
                                 ),
                             ],
                           );
@@ -303,18 +382,22 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : const Text('Guardar'),
+                              : Text(
+                                  _isEditing ? 'Guardar cambios' : 'Guardar',
+                                ),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: OutlinedButton(
-                          onPressed: _saving ? null : _saveAndAddAnother,
-                          child: const Text('Guardar y agregar otro'),
+                      if (!_isEditing) ...[
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: OutlinedButton(
+                            onPressed: _saving ? null : _saveAndAddAnother,
+                            child: const Text('Guardar y agregar otro'),
+                          ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),

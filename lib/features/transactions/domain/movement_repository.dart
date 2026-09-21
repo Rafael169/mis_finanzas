@@ -1,9 +1,8 @@
 import '../../../core/domain/money.dart';
-import 'movement_impact.dart';
 
-/// Datos de un movimiento nuevo, ya validados.
-class NewMovement {
-  const NewMovement({
+/// Datos de un movimiento, ya validados. Sirve para crear y para editar.
+class MovementData {
+  const MovementData({
     required this.id,
     required this.categoryId,
     required this.isIncome,
@@ -27,7 +26,15 @@ class NewMovement {
 }
 
 abstract class MovementRepository {
-  /// Guarda el movimiento y actualiza los totales del mes, todo o nada:
-  /// si algo falla, no se guarda nada.
-  Future<void> add(NewMovement movement, MovementImpact impact);
+  /// Guarda el movimiento y recalcula los totales del mes, todo o nada.
+  Future<void> add(MovementData movement);
+
+  /// Reemplaza los datos del movimiento con ese id. Puede cambiarlo de mes.
+  Future<void> update(MovementData movement);
+
+  /// Borrado lógico: el movimiento queda marcado como eliminado.
+  Future<void> softDelete(String id);
+
+  /// Deshace un borrado lógico.
+  Future<void> restore(String id);
 }

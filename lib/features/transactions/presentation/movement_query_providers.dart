@@ -17,6 +17,12 @@ final monthMovementsProvider = StreamProvider<List<MovementItem>>((ref) {
   return ref.watch(movementReaderProvider).watchMonth(month);
 });
 
+/// Un movimiento por id (para la pantalla de edición).
+final movementByIdProvider =
+    FutureProvider.autoDispose.family<MovementItem?, String>((ref, id) {
+  return ref.watch(movementReaderProvider).getById(id);
+});
+
 class MovementFilterNotifier extends Notifier<MovementFilter> {
   @override
   MovementFilter build() => const MovementFilter();

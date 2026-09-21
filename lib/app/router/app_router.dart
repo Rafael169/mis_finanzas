@@ -7,6 +7,7 @@ import '../../features/onboarding/presentation/onboarding_page.dart';
 import '../../features/onboarding/presentation/splash_page.dart';
 import '../../features/settings/presentation/db_check_page.dart';
 import '../../features/settings/presentation/settings_providers.dart';
+import '../../features/transactions/presentation/edit_transaction_page.dart';
 import '../../features/transactions/presentation/movements_page.dart';
 import '../../features/transactions/presentation/new_transaction_page.dart';
 import 'app_shell.dart';
@@ -104,10 +105,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-      // Fuera de la barra de navegación: se abre a pantalla completa.
+      // Fuera de la barra de navegación: se abren a pantalla completa.
       GoRoute(
         path: '/nuevo-movimiento',
         builder: (context, state) => const NewTransactionPage(),
+      ),
+      GoRoute(
+        path: '/editar-movimiento/:id',
+        builder: (context, state) =>
+            EditTransactionPage(movementId: state.pathParameters['id']!),
       ),
     ],
   );
