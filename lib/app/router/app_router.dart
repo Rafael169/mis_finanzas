@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/widgets/placeholder_page.dart';
+import '../../features/budgets/presentation/budgets_page.dart';
 import '../../features/onboarding/presentation/onboarding_page.dart';
 import '../../features/onboarding/presentation/splash_page.dart';
 import '../../features/settings/presentation/db_check_page.dart';
@@ -75,10 +76,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/presupuestos',
-                builder: (context, state) => const PlaceholderPage(
-                  title: 'Presupuestos',
-                  icon: Icons.account_balance_wallet_outlined,
-                ),
+                builder: (context, state) => const BudgetsPage(),
               ),
             ],
           ),
