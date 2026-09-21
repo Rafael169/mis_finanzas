@@ -149,9 +149,7 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
   Future<void> _saveAndAddAnother() async {
     final messenger = ScaffoldMessenger.of(context);
     if (!await _save()) return;
-    messenger.showSnackBar(
-      const SnackBar(content: Text('Movimiento guardado')),
-    );
+    messenger.showSnackBar(const SnackBar(content: Text('Movimiento guardado')));
     if (!mounted) return;
     setState(() {
       _amountController.clear();
@@ -198,10 +196,13 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
     final format = ref.watch(moneyFormatterProvider);
     final categories = ref.watch(categoriesProvider);
 
+    // Con el teclado abierto no hay espacio: Guardar sube a la barra superior
+    // y los botones de abajo se ocultan.
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+
     final parsed = parseMoneyInput(_amountController.text, currency);
-    final preview = (parsed != null && parsed > Money.zero)
-        ? format(parsed)
-        : null;
+    final preview =
+        (parsed != null && parsed > Money.zero) ? format(parsed) : null;
 
     final today = _dayOf(DateTime.now());
     final yesterday = DateTime(today.year, today.month, today.day - 1);
@@ -220,6 +221,14 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
               icon: const Icon(Icons.delete_outline),
               onPressed: _saving ? null : _delete,
             ),
+          if (keyboardOpen)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: FilledButton(
+                onPressed: _saving ? null : _saveAndClose,
+                child: const Text('Guardar'),
+              ),
+            ),
         ],
       ),
       body: SafeArea(
@@ -231,6 +240,8 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
                 Expanded(
                   child: ListView(
                     padding: const EdgeInsets.all(20),
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     children: [
                       SegmentedButton<bool>(
                         segments: const [
@@ -252,11 +263,12 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
                           _categoryError = null;
                         }),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
                       TextField(
                         controller: _amountController,
                         focusNode: _amountFocus,
                         autofocus: !_isEditing,
+                        textInputAction: TextInputAction.done,
                         keyboardType: TextInputType.numberWithOptions(
                           decimal: currency.displayDecimals > 0,
                         ),
@@ -279,14 +291,15 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
                         ),
                         onChanged: (_) => setState(() => _amountError = null),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
                       Text('Categoría', style: theme.textTheme.titleMedium),
                       const SizedBox(height: 8),
                       categories.when(
                         loading: () =>
                             const Center(child: CircularProgressIndicator()),
-                        error: (_, _) =>
-                            const Text('No se pudieron cargar las categorías.'),
+                        error: (_, _) => const Text(
+                          'No se pudieron cargar las categorías.',
+                        ),
                         data: (all) {
                           final options = all
                               .where((c) => c.isIncome == _isIncome)
@@ -306,10 +319,16 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
                                   selected: _categoryId == c.id,
                                   onSelected: _saving
                                       ? null
-                                      : (_) => setState(() {
-                                          _categoryId = c.id;
-                                          _categoryError = null;
-                                        }),
+                                      : (_) {
+                                          setState(() {
+                                            _categoryId = c.id;
+                                            _categoryError = null;
+                                          });
+                                          // Cierra el teclado para que
+                                          // aparezcan los botones de abajo.
+                                          FocusManager.instance.primaryFocus
+                                              ?.unfocus();
+                                        },
                                 ),
                             ],
                           );
@@ -323,7 +342,7 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
                             style: TextStyle(color: theme.colorScheme.error),
                           ),
                         ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
                       Text('Fecha', style: theme.textTheme.titleMedium),
                       const SizedBox(height: 8),
                       Wrap(
@@ -353,7 +372,7 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
                         'Corte ${CutRule.cutFor(_date)}',
                         style: theme.textTheme.bodyMedium,
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
                       TextField(
                         controller: _descriptionController,
                         textCapitalization: TextCapitalization.sentences,
@@ -365,42 +384,43 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
                     ],
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                  child: Column(
-                    children: [
-                      SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: FilledButton(
-                          onPressed: _saving ? null : _saveAndClose,
-                          child: _saving
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Text(
-                                  _isEditing ? 'Guardar cambios' : 'Guardar',
-                                ),
-                        ),
-                      ),
-                      if (!_isEditing) ...[
-                        const SizedBox(height: 8),
+                if (!keyboardOpen)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                    child: Column(
+                      children: [
                         SizedBox(
                           width: double.infinity,
-                          height: 48,
-                          child: OutlinedButton(
-                            onPressed: _saving ? null : _saveAndAddAnother,
-                            child: const Text('Guardar y agregar otro'),
+                          height: 52,
+                          child: FilledButton(
+                            onPressed: _saving ? null : _saveAndClose,
+                            child: _saving
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Text(
+                                    _isEditing ? 'Guardar cambios' : 'Guardar',
+                                  ),
                           ),
                         ),
+                        if (!_isEditing) ...[
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 48,
+                            child: OutlinedButton(
+                              onPressed: _saving ? null : _saveAndAddAnother,
+                              child: const Text('Guardar y agregar otro'),
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
               ],
             ),
           ),
