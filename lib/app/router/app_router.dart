@@ -12,6 +12,7 @@ import '../../features/settings/presentation/settings_providers.dart';
 import '../../features/transactions/presentation/edit_transaction_page.dart';
 import '../../features/transactions/presentation/movements_page.dart';
 import '../../features/transactions/presentation/new_transaction_page.dart';
+import '../../features/categories/presentation/categories_page.dart';
 import 'app_shell.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -107,6 +108,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/editar-movimiento/:id',
         builder: (context, state) =>
             EditTransactionPage(movementId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/categorias',
+        builder: (context, state) => const CategoriesPage(),
       ),
     ],
   );

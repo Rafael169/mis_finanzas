@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../domain/app_theme_mode.dart';
 import '../domain/user_settings.dart';
 import 'settings_providers.dart';
 
-/// Pestaña Perfil. Por ahora: apariencia y moneda. Más adelante llegan
-/// las categorías, el respaldo y el bloqueo de la app.
+/// Pestaña Perfil.
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
 
@@ -46,6 +46,17 @@ class ProfilePage extends ConsumerWidget {
             leading: const Icon(Icons.payments_outlined),
             title: Text(currency.name),
             subtitle: Text(currency.code),
+          ),
+          const SizedBox(height: 24),
+          Text('Datos', style: theme.textTheme.titleMedium),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.category_outlined),
+              title: const Text('Categorías'),
+              subtitle: const Text('Crear, editar y archivar'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/categorias'),
+            ),
           ),
         ],
       ),
