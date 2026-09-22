@@ -15,6 +15,8 @@ import '../../settings/presentation/settings_providers.dart';
 import '../domain/movement_item.dart';
 import '../domain/register_movement.dart';
 import 'movement_providers.dart';
+import '../../budgets/domain/budget_alert.dart';
+import '../data/drift_movement_repository.dart';
 
 /// Formulario para registrar un ingreso o un gasto, o para editar uno.
 class NewTransactionPage extends ConsumerStatefulWidget {
@@ -84,6 +86,7 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
   }
 
   /// Valida y guarda. Devuelve true si el movimiento quedó guardado.
+  /// Valida y guarda. Devuelve true si el movimiento quedó guardado.
   Future<bool> _save() async {
     final messenger = ScaffoldMessenger.of(context);
     final currency = ref.read(currencyProvider);
@@ -121,6 +124,7 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
           description: _descriptionController.text,
         );
       }
+      _showAlertsIfAny();
       return true;
     } on MovementException catch (e) {
       messenger.showSnackBar(SnackBar(content: Text(e.message)));
@@ -135,7 +139,25 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
     }
   }
 
+  void _showAlertsIfAny() {
+    final repository = ref.read(movementRepositoryProvider);
+    // El repositorio concreto expone las alertas de la última operación.
+    if (repository is! DriftMovementRepository) return;
+
+    final alerts = repository.lastAlerts;
+    if (alerts.isEmpty || !mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    for (final alert in alerts) {
+      final text = alert.level == AlertLevel.over
+          ? '${alert.category.name}: superaste el presupuesto'
+          : '${alert.category.name}: llegando al límite del presupuesto';
+      messenger.showSnackBar(SnackBar(content: Text(text)));
+    }
+  }
+
   Future<void> _saveAndClose() async {
+    
     final messenger = ScaffoldMessenger.of(context);
     if (!await _save()) return;
     messenger.showSnackBar(
@@ -149,7 +171,9 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
   Future<void> _saveAndAddAnother() async {
     final messenger = ScaffoldMessenger.of(context);
     if (!await _save()) return;
-    messenger.showSnackBar(const SnackBar(content: Text('Movimiento guardado')));
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Movimiento guardado')),
+    );
     if (!mounted) return;
     setState(() {
       _amountController.clear();
@@ -201,8 +225,9 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
     final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
 
     final parsed = parseMoneyInput(_amountController.text, currency);
-    final preview =
-        (parsed != null && parsed > Money.zero) ? format(parsed) : null;
+    final preview = (parsed != null && parsed > Money.zero)
+        ? format(parsed)
+        : null;
 
     final today = _dayOf(DateTime.now());
     final yesterday = DateTime(today.year, today.month, today.day - 1);
@@ -297,9 +322,8 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
                       categories.when(
                         loading: () =>
                             const Center(child: CircularProgressIndicator()),
-                        error: (_, _) => const Text(
-                          'No se pudieron cargar las categorías.',
-                        ),
+                        error: (_, _) =>
+                            const Text('No se pudieron cargar las categorías.'),
                         data: (all) {
                           final options = all
                               .where((c) => c.isIncome == _isIncome)
@@ -384,43 +408,52 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
                     ],
                   ),
                 ),
-                if (!keyboardOpen)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                    child: Column(
-                      children: [
-                        SizedBox(
-                          width: double.infinity,
-                          height: 52,
-                          child: FilledButton(
-                            onPressed: _saving ? null : _saveAndClose,
-                            child: _saving
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : Text(
-                                    _isEditing ? 'Guardar cambios' : 'Guardar',
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 150),
+                  curve: Curves.easeOut,
+                  child: keyboardOpen
+                      ? const SizedBox.shrink()
+                      : Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                          child: Column(
+                            children: [
+                              SizedBox(
+                                width: double.infinity,
+                                height: 52,
+                                child: FilledButton(
+                                  onPressed: _saving ? null : _saveAndClose,
+                                  child: _saving
+                                      ? const SizedBox(
+                                          height: 20,
+                                          width: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : Text(
+                                          _isEditing
+                                              ? 'Guardar cambios'
+                                              : 'Guardar',
+                                        ),
+                                ),
+                              ),
+                              if (!_isEditing) ...[
+                                const SizedBox(height: 8),
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 48,
+                                  child: OutlinedButton(
+                                    onPressed: _saving
+                                        ? null
+                                        : _saveAndAddAnother,
+                                    child: const Text('Guardar y agregar otro'),
                                   ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
-                        if (!_isEditing) ...[
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            width: double.infinity,
-                            height: 48,
-                            child: OutlinedButton(
-                              onPressed: _saving ? null : _saveAndAddAnother,
-                              child: const Text('Guardar y agregar otro'),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
+                ),
               ],
             ),
           ),

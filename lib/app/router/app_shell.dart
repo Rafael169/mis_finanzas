@@ -49,7 +49,7 @@ class AppShell extends StatelessWidget {
           NavigationDestination(
             icon: Icon(Icons.account_balance_wallet_outlined),
             selectedIcon: Icon(Icons.account_balance_wallet),
-            label: 'Presupuestos',
+            label: 'Presup.',
           ),
           NavigationDestination(
             icon: Icon(Icons.insights_outlined),

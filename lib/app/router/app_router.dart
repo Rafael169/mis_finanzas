@@ -6,13 +6,13 @@ import '../../core/widgets/placeholder_page.dart';
 import '../../features/budgets/presentation/budgets_page.dart';
 import '../../features/onboarding/presentation/onboarding_page.dart';
 import '../../features/onboarding/presentation/splash_page.dart';
-import '../../features/settings/presentation/db_check_page.dart';
 import '../../features/settings/presentation/profile_page.dart';
 import '../../features/settings/presentation/settings_providers.dart';
 import '../../features/transactions/presentation/edit_transaction_page.dart';
 import '../../features/transactions/presentation/movements_page.dart';
 import '../../features/transactions/presentation/new_transaction_page.dart';
 import 'app_shell.dart';
+import '../../features/dashboard/presentation/home_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   // Avisa al router cuando cambian los ajustes, para que reevalúe el redirect.
@@ -60,7 +60,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/inicio',
-                builder: (context, state) => const DbCheckPage(), // TEMPORAL
+                builder: (context, state) => const HomePage(),
               ),
             ],
           ),
