@@ -15,7 +15,7 @@ class MonthSelector extends ConsumerWidget {
     final notifier = ref.read(selectedPeriodProvider.notifier);
 
     final raw = DateFormat('MMMM yyyy', 'es_CO').format(month.firstDay);
-    final label = toBeginningOfSentenceCase(raw) ?? raw;
+    final label = toBeginningOfSentenceCase(raw);
 
     return Row(
       children: [

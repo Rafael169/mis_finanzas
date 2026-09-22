@@ -77,31 +77,33 @@ void main() {
     expect(summary.totalExpense, Money.zero);
   });
 
-  test('el desglose por categoría suma el año y ordena de mayor a menor',
-      () async {
-    await register(
-      category: byName['Mecatos']!,
-      amount: const Money.fromUnits(30000),
-      date: DateTime(2026, 2, 10),
-    );
-    await register(
-      category: byName['Mecatos']!,
-      amount: const Money.fromUnits(20000),
-      date: DateTime(2026, 8, 10),
-    );
-    await register(
-      category: byName['Arriendo']!,
-      amount: const Money.fromUnits(500000),
-      date: DateTime(2026, 5, 1),
-    );
+  test(
+    'el desglose por categoría suma el año y ordena de mayor a menor',
+    () async {
+      await register(
+        category: byName['Mecatos']!,
+        amount: const Money.fromUnits(30000),
+        date: DateTime(2026, 2, 10),
+      );
+      await register(
+        category: byName['Mecatos']!,
+        amount: const Money.fromUnits(20000),
+        date: DateTime(2026, 8, 10),
+      );
+      await register(
+        category: byName['Arriendo']!,
+        amount: const Money.fromUnits(500000),
+        date: DateTime(2026, 5, 1),
+      );
 
-    final breakdown = await analytics.watchExpenseBreakdown(2026).first;
+      final breakdown = await analytics.watchExpenseBreakdown(2026).first;
 
-    expect(breakdown.first.category.name, 'Arriendo');
-    expect(breakdown.first.actual, const Money.fromUnits(500000));
-    final snacks = breakdown.firstWhere((b) => b.category.name == 'Mecatos');
-    expect(snacks.actual, const Money.fromUnits(50000));
-  });
+      expect(breakdown.first.category.name, 'Arriendo');
+      expect(breakdown.first.actual, const Money.fromUnits(500000));
+      final snacks = breakdown.firstWhere((b) => b.category.name == 'Mecatos');
+      expect(snacks.actual, const Money.fromUnits(50000));
+    },
+  );
 
   test('el desglose no incluye ingresos', () async {
     await register(

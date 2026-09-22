@@ -70,7 +70,8 @@ class HomePage extends ConsumerWidget {
                 budgets.when(
                   loading: () => const SizedBox.shrink(),
                   error: (_, _) => const SizedBox.shrink(),
-                  data: (all) => _ExpenseBreakdownCard(budgets: all, format: format),
+                  data: (all) =>
+                      _ExpenseBreakdownCard(budgets: all, format: format),
                 ),
                 const SizedBox(height: 12),
                 budgets.when(
@@ -93,7 +94,10 @@ class HomePage extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 20),
-          Text('Últimos movimientos', style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            'Últimos movimientos',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 8),
           if (recent.isEmpty)
             const Padding(
@@ -148,7 +152,11 @@ class _BalanceCard extends StatelessWidget {
 }
 
 class _MetricCard extends StatelessWidget {
-  const _MetricCard({required this.label, required this.value, required this.color});
+  const _MetricCard({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   final String label;
   final String value;
@@ -198,7 +206,10 @@ class _IncomeBreakdownCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Ingresos del mes', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'Ingresos del mes',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 12),
             SimplePieChart(
               slices: [
@@ -238,12 +249,14 @@ class _ExpenseBreakdownCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final expenses = budgets
-        .where((b) => !b.category.isIncome && b.actualMonth.minorUnits > 0)
-        .toList()
-      ..sort(
-        (a, b) => b.actualMonth.minorUnits.compareTo(a.actualMonth.minorUnits),
-      );
+    final expenses =
+        budgets
+            .where((b) => !b.category.isIncome && b.actualMonth.minorUnits > 0)
+            .toList()
+          ..sort(
+            (a, b) =>
+                b.actualMonth.minorUnits.compareTo(a.actualMonth.minorUnits),
+          );
 
     final top = expenses.take(5).toList();
     final restTotal = expenses
@@ -271,7 +284,10 @@ class _ExpenseBreakdownCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Gastos por categoría', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'Gastos por categoría',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 12),
             SimplePieChart(slices: slices),
           ],
@@ -299,7 +315,10 @@ class _ExpenseProgressCard extends StatelessWidget {
     final theme = Theme.of(context);
     final totalLimit = budgets
         .where((b) => !b.category.isIncome)
-        .fold<Money>(Money.zero, (sum, b) => sum + (b.monthLimit ?? Money.zero));
+        .fold<Money>(
+          Money.zero,
+          (sum, b) => sum + (b.monthLimit ?? Money.zero),
+        );
 
     final status = budgetStatus(
       isIncome: false,
@@ -360,7 +379,6 @@ class _AntExpenseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final percent = expense.ratioTo(antExpense.isZero ? expense : expense);
     final ratio = expense.isZero ? null : antExpense.ratioTo(expense);
 
     return Card(
@@ -375,7 +393,10 @@ class _AntExpenseCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Gasto hormiga del mes', style: theme.textTheme.titleSmall),
+                  Text(
+                    'Gasto hormiga del mes',
+                    style: theme.textTheme.titleSmall,
+                  ),
                   Text(
                     ratio == null
                         ? format(antExpense)
@@ -400,8 +421,9 @@ class _RecentTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = categoryColor(item.categoryColorHex);
-    final amountColor =
-        item.isIncome ? context.appColors.income : context.appColors.expense;
+    final amountColor = item.isIncome
+        ? context.appColors.income
+        : context.appColors.expense;
     final sign = item.isIncome ? '+' : '-';
 
     return ListTile(

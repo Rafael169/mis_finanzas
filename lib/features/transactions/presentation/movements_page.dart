@@ -311,7 +311,7 @@ class _DayHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final raw = DateFormat("EEEE d 'de' MMMM", 'es_CO').format(date);
-    final label = toBeginningOfSentenceCase(raw) ?? raw;
+    final label = toBeginningOfSentenceCase(raw);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
