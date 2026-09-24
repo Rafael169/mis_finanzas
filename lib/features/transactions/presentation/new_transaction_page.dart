@@ -157,7 +157,6 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
   }
 
   Future<void> _saveAndClose() async {
-    
     final messenger = ScaffoldMessenger.of(context);
     if (!await _save()) return;
     messenger.showSnackBar(
@@ -239,6 +238,7 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
         ),
+
         actions: [
           if (_isEditing)
             IconButton(
@@ -246,14 +246,21 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
               icon: const Icon(Icons.delete_outline),
               onPressed: _saving ? null : _delete,
             ),
-          if (keyboardOpen)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: FilledButton(
-                onPressed: _saving ? null : _saveAndClose,
-                child: const Text('Guardar'),
-              ),
-            ),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 150),
+            transitionBuilder: (child, animation) =>
+                FadeTransition(opacity: animation, child: child),
+            child: keyboardOpen
+                ? Padding(
+                    key: const ValueKey('save'),
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilledButton(
+                      onPressed: _saving ? null : _saveAndClose,
+                      child: const Text('Guardar'),
+                    ),
+                  )
+                : const SizedBox(key: ValueKey('empty')),
+          ),
         ],
       ),
       body: SafeArea(
