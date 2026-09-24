@@ -19,7 +19,6 @@ FinanceCategory _validated(FinanceCategory category) {
   if (name.length > 40) {
     throw const CategoryException('El nombre es demasiado largo.');
   }
-  // Solo un gasto variable puede ser hormiga (misma regla del modelo).
   if (category.isAntExpense && (category.isIncome || category.isFixed)) {
     throw const CategoryException(
       'Solo un gasto variable puede marcarse como hormiga.',
@@ -33,13 +32,13 @@ FinanceCategory _validated(FinanceCategory category) {
     isAntExpense: category.isAntExpense,
     iconKey: category.iconKey,
     colorHex: category.colorHex,
+    groupLabel: category.groupLabel,
     sortOrder: category.sortOrder,
     isArchived: category.isArchived,
     isDefault: category.isDefault,
   );
 }
 
-/// Crea una categoría nueva.
 class AddCategory {
   AddCategory(this._repository);
 
@@ -50,7 +49,6 @@ class AddCategory {
   }
 }
 
-/// Edita una categoría existente.
 class UpdateCategory {
   UpdateCategory(this._repository);
 

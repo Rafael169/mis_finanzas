@@ -1624,6 +1624,18 @@ class $CategoriesTable extends Categories
     requiredDuringInsert: false,
     defaultValue: const Constant('#1E6FD9'),
   );
+  static const VerificationMeta _groupLabelMeta = const VerificationMeta(
+    'groupLabel',
+  );
+  @override
+  late final GeneratedColumn<String> groupLabel = GeneratedColumn<String>(
+    'group_label',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('Otras'),
+  );
   static const VerificationMeta _sortOrderMeta = const VerificationMeta(
     'sortOrder',
   );
@@ -1697,6 +1709,7 @@ class $CategoriesTable extends Categories
     isAntExpense,
     iconKey,
     colorHex,
+    groupLabel,
     sortOrder,
     isArchived,
     isDefault,
@@ -1761,6 +1774,12 @@ class $CategoriesTable extends Categories
       context.handle(
         _colorHexMeta,
         colorHex.isAcceptableOrUnknown(data['color_hex']!, _colorHexMeta),
+      );
+    }
+    if (data.containsKey('group_label')) {
+      context.handle(
+        _groupLabelMeta,
+        groupLabel.isAcceptableOrUnknown(data['group_label']!, _groupLabelMeta),
       );
     }
     if (data.containsKey('sort_order')) {
@@ -1834,6 +1853,10 @@ class $CategoriesTable extends Categories
         DriftSqlType.string,
         data['${effectivePrefix}color_hex'],
       )!,
+      groupLabel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}group_label'],
+      )!,
       sortOrder: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}sort_order'],
@@ -1876,6 +1899,9 @@ class Category extends DataClass implements Insertable<Category> {
   final bool isAntExpense;
   final String iconKey;
   final String colorHex;
+
+  /// Grupo para organizar la categoría en pantalla (ver categoryGroups).
+  final String groupLabel;
   final int sortOrder;
   final bool isArchived;
   final bool isDefault;
@@ -1889,6 +1915,7 @@ class Category extends DataClass implements Insertable<Category> {
     required this.isAntExpense,
     required this.iconKey,
     required this.colorHex,
+    required this.groupLabel,
     required this.sortOrder,
     required this.isArchived,
     required this.isDefault,
@@ -1905,6 +1932,7 @@ class Category extends DataClass implements Insertable<Category> {
     map['is_ant_expense'] = Variable<bool>(isAntExpense);
     map['icon_key'] = Variable<String>(iconKey);
     map['color_hex'] = Variable<String>(colorHex);
+    map['group_label'] = Variable<String>(groupLabel);
     map['sort_order'] = Variable<int>(sortOrder);
     map['is_archived'] = Variable<bool>(isArchived);
     map['is_default'] = Variable<bool>(isDefault);
@@ -1922,6 +1950,7 @@ class Category extends DataClass implements Insertable<Category> {
       isAntExpense: Value(isAntExpense),
       iconKey: Value(iconKey),
       colorHex: Value(colorHex),
+      groupLabel: Value(groupLabel),
       sortOrder: Value(sortOrder),
       isArchived: Value(isArchived),
       isDefault: Value(isDefault),
@@ -1943,6 +1972,7 @@ class Category extends DataClass implements Insertable<Category> {
       isAntExpense: serializer.fromJson<bool>(json['isAntExpense']),
       iconKey: serializer.fromJson<String>(json['iconKey']),
       colorHex: serializer.fromJson<String>(json['colorHex']),
+      groupLabel: serializer.fromJson<String>(json['groupLabel']),
       sortOrder: serializer.fromJson<int>(json['sortOrder']),
       isArchived: serializer.fromJson<bool>(json['isArchived']),
       isDefault: serializer.fromJson<bool>(json['isDefault']),
@@ -1961,6 +1991,7 @@ class Category extends DataClass implements Insertable<Category> {
       'isAntExpense': serializer.toJson<bool>(isAntExpense),
       'iconKey': serializer.toJson<String>(iconKey),
       'colorHex': serializer.toJson<String>(colorHex),
+      'groupLabel': serializer.toJson<String>(groupLabel),
       'sortOrder': serializer.toJson<int>(sortOrder),
       'isArchived': serializer.toJson<bool>(isArchived),
       'isDefault': serializer.toJson<bool>(isDefault),
@@ -1977,6 +2008,7 @@ class Category extends DataClass implements Insertable<Category> {
     bool? isAntExpense,
     String? iconKey,
     String? colorHex,
+    String? groupLabel,
     int? sortOrder,
     bool? isArchived,
     bool? isDefault,
@@ -1990,6 +2022,7 @@ class Category extends DataClass implements Insertable<Category> {
     isAntExpense: isAntExpense ?? this.isAntExpense,
     iconKey: iconKey ?? this.iconKey,
     colorHex: colorHex ?? this.colorHex,
+    groupLabel: groupLabel ?? this.groupLabel,
     sortOrder: sortOrder ?? this.sortOrder,
     isArchived: isArchived ?? this.isArchived,
     isDefault: isDefault ?? this.isDefault,
@@ -2007,6 +2040,9 @@ class Category extends DataClass implements Insertable<Category> {
           : this.isAntExpense,
       iconKey: data.iconKey.present ? data.iconKey.value : this.iconKey,
       colorHex: data.colorHex.present ? data.colorHex.value : this.colorHex,
+      groupLabel: data.groupLabel.present
+          ? data.groupLabel.value
+          : this.groupLabel,
       sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
       isArchived: data.isArchived.present
           ? data.isArchived.value
@@ -2027,6 +2063,7 @@ class Category extends DataClass implements Insertable<Category> {
           ..write('isAntExpense: $isAntExpense, ')
           ..write('iconKey: $iconKey, ')
           ..write('colorHex: $colorHex, ')
+          ..write('groupLabel: $groupLabel, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('isArchived: $isArchived, ')
           ..write('isDefault: $isDefault, ')
@@ -2045,6 +2082,7 @@ class Category extends DataClass implements Insertable<Category> {
     isAntExpense,
     iconKey,
     colorHex,
+    groupLabel,
     sortOrder,
     isArchived,
     isDefault,
@@ -2062,6 +2100,7 @@ class Category extends DataClass implements Insertable<Category> {
           other.isAntExpense == this.isAntExpense &&
           other.iconKey == this.iconKey &&
           other.colorHex == this.colorHex &&
+          other.groupLabel == this.groupLabel &&
           other.sortOrder == this.sortOrder &&
           other.isArchived == this.isArchived &&
           other.isDefault == this.isDefault &&
@@ -2077,6 +2116,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
   final Value<bool> isAntExpense;
   final Value<String> iconKey;
   final Value<String> colorHex;
+  final Value<String> groupLabel;
   final Value<int> sortOrder;
   final Value<bool> isArchived;
   final Value<bool> isDefault;
@@ -2091,6 +2131,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     this.isAntExpense = const Value.absent(),
     this.iconKey = const Value.absent(),
     this.colorHex = const Value.absent(),
+    this.groupLabel = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.isArchived = const Value.absent(),
     this.isDefault = const Value.absent(),
@@ -2106,6 +2147,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     this.isAntExpense = const Value.absent(),
     this.iconKey = const Value.absent(),
     this.colorHex = const Value.absent(),
+    this.groupLabel = const Value.absent(),
     this.sortOrder = const Value.absent(),
     this.isArchived = const Value.absent(),
     this.isDefault = const Value.absent(),
@@ -2125,6 +2167,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     Expression<bool>? isAntExpense,
     Expression<String>? iconKey,
     Expression<String>? colorHex,
+    Expression<String>? groupLabel,
     Expression<int>? sortOrder,
     Expression<bool>? isArchived,
     Expression<bool>? isDefault,
@@ -2140,6 +2183,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       if (isAntExpense != null) 'is_ant_expense': isAntExpense,
       if (iconKey != null) 'icon_key': iconKey,
       if (colorHex != null) 'color_hex': colorHex,
+      if (groupLabel != null) 'group_label': groupLabel,
       if (sortOrder != null) 'sort_order': sortOrder,
       if (isArchived != null) 'is_archived': isArchived,
       if (isDefault != null) 'is_default': isDefault,
@@ -2157,6 +2201,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     Value<bool>? isAntExpense,
     Value<String>? iconKey,
     Value<String>? colorHex,
+    Value<String>? groupLabel,
     Value<int>? sortOrder,
     Value<bool>? isArchived,
     Value<bool>? isDefault,
@@ -2172,6 +2217,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       isAntExpense: isAntExpense ?? this.isAntExpense,
       iconKey: iconKey ?? this.iconKey,
       colorHex: colorHex ?? this.colorHex,
+      groupLabel: groupLabel ?? this.groupLabel,
       sortOrder: sortOrder ?? this.sortOrder,
       isArchived: isArchived ?? this.isArchived,
       isDefault: isDefault ?? this.isDefault,
@@ -2205,6 +2251,9 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     if (colorHex.present) {
       map['color_hex'] = Variable<String>(colorHex.value);
     }
+    if (groupLabel.present) {
+      map['group_label'] = Variable<String>(groupLabel.value);
+    }
     if (sortOrder.present) {
       map['sort_order'] = Variable<int>(sortOrder.value);
     }
@@ -2236,6 +2285,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
           ..write('isAntExpense: $isAntExpense, ')
           ..write('iconKey: $iconKey, ')
           ..write('colorHex: $colorHex, ')
+          ..write('groupLabel: $groupLabel, ')
           ..write('sortOrder: $sortOrder, ')
           ..write('isArchived: $isArchived, ')
           ..write('isDefault: $isDefault, ')
@@ -5035,6 +5085,7 @@ typedef $$CategoriesTableCreateCompanionBuilder = CategoriesCompanion Function({
   Value<bool> isAntExpense,
   Value<String> iconKey,
   Value<String> colorHex,
+  Value<String> groupLabel,
   Value<int> sortOrder,
   Value<bool> isArchived,
   Value<bool> isDefault,
@@ -5050,6 +5101,7 @@ typedef $$CategoriesTableUpdateCompanionBuilder = CategoriesCompanion Function({
   Value<bool> isAntExpense,
   Value<String> iconKey,
   Value<String> colorHex,
+  Value<String> groupLabel,
   Value<int> sortOrder,
   Value<bool> isArchived,
   Value<bool> isDefault,
@@ -5172,6 +5224,11 @@ class $$CategoriesTableFilterComposer
 
   ColumnFilters<String> get colorHex => $composableBuilder(
     column: $table.colorHex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get groupLabel => $composableBuilder(
+    column: $table.groupLabel,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5321,6 +5378,11 @@ class $$CategoriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get groupLabel => $composableBuilder(
+    column: $table.groupLabel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get sortOrder => $composableBuilder(
     column: $table.sortOrder,
     builder: (column) => ColumnOrderings(column),
@@ -5378,6 +5440,11 @@ class $$CategoriesTableAnnotationComposer
 
   GeneratedColumn<String> get colorHex =>
       $composableBuilder(column: $table.colorHex, builder: (column) => column);
+
+  GeneratedColumn<String> get groupLabel => $composableBuilder(
+    column: $table.groupLabel,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get sortOrder =>
       $composableBuilder(column: $table.sortOrder, builder: (column) => column);
@@ -5513,6 +5580,7 @@ class $$CategoriesTableTableManager
                 Value<bool> isAntExpense = const Value.absent(),
                 Value<String> iconKey = const Value.absent(),
                 Value<String> colorHex = const Value.absent(),
+                Value<String> groupLabel = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 Value<bool> isArchived = const Value.absent(),
                 Value<bool> isDefault = const Value.absent(),
@@ -5527,6 +5595,7 @@ class $$CategoriesTableTableManager
                 isAntExpense: isAntExpense,
                 iconKey: iconKey,
                 colorHex: colorHex,
+                groupLabel: groupLabel,
                 sortOrder: sortOrder,
                 isArchived: isArchived,
                 isDefault: isDefault,
@@ -5543,6 +5612,7 @@ class $$CategoriesTableTableManager
                 Value<bool> isAntExpense = const Value.absent(),
                 Value<String> iconKey = const Value.absent(),
                 Value<String> colorHex = const Value.absent(),
+                Value<String> groupLabel = const Value.absent(),
                 Value<int> sortOrder = const Value.absent(),
                 Value<bool> isArchived = const Value.absent(),
                 Value<bool> isDefault = const Value.absent(),
@@ -5557,6 +5627,7 @@ class $$CategoriesTableTableManager
                 isAntExpense: isAntExpense,
                 iconKey: iconKey,
                 colorHex: colorHex,
+                groupLabel: groupLabel,
                 sortOrder: sortOrder,
                 isArchived: isArchived,
                 isDefault: isDefault,

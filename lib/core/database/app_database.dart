@@ -16,19 +16,14 @@ part 'app_database.g.dart';
   ],
 )
 class AppDatabase extends _$AppDatabase {
-  /// Base de datos real, guardada en el dispositivo.
   AppDatabase.open() : super(driftDatabase(name: 'mis_finanzas'));
-
-  /// Para pruebas: recibe un ejecutor (por ejemplo, una base en memoria).
   AppDatabase.forTesting(super.e);
 
-  /// Versión del esquema. Sube en 1 cada vez que cambian las tablas y
-  /// siempre con su migración en [migration].
-  ///
   /// - 1: versión inicial.
   /// - 2: tema de la app (columna `themeMode` en los ajustes).
+  /// - 3: grupo de categoría (columna `groupLabel`).
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -36,9 +31,11 @@ class AppDatabase extends _$AppDatabase {
           if (from < 2) {
             await migrator.addColumn(appSettings, appSettings.themeMode);
           }
+          if (from < 3) {
+            await migrator.addColumn(categories, categories.groupLabel);
+          }
         },
         beforeOpen: (details) async {
-          // SQLite no hace cumplir las claves foráneas si no se activan.
           await customStatement('PRAGMA foreign_keys = ON');
         },
       );

@@ -29,6 +29,7 @@ class SeedDefaultCategories {
           isAntExpense: seed.isAntExpense,
           iconKey: seed.iconKey,
           colorHex: seed.colorHex,
+          groupLabel: seed.groupLabel,
           sortOrder: i,
           isDefault: true,
         ),

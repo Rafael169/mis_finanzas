@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
-
+import '../domain/category_groups.dart';
 import '../domain/finance_category.dart';
 import '../domain/update_category.dart';
 import 'category_icons.dart';
@@ -13,7 +13,6 @@ import 'category_visuals.dart';
 class CategoryEditSheet extends ConsumerStatefulWidget {
   const CategoryEditSheet({super.key, this.editing, required this.isIncome});
 
-  /// Si no es null, edita esta categoría en lugar de crear una nueva.
   final FinanceCategory? editing;
   final bool isIncome;
 
@@ -27,6 +26,7 @@ class _CategoryEditSheetState extends ConsumerState<CategoryEditSheet> {
   late bool _isAnt;
   late String _iconKey;
   late String _colorHex;
+  late String _groupLabel;
   bool _saving = false;
   String? _error;
 
@@ -41,6 +41,7 @@ class _CategoryEditSheetState extends ConsumerState<CategoryEditSheet> {
     _isAnt = editing?.isAntExpense ?? false;
     _iconKey = editing?.iconKey ?? 'category';
     _colorHex = editing?.colorHex ?? selectableCategoryColors.first;
+    _groupLabel = editing?.groupLabel ?? 'Otras';
   }
 
   @override
@@ -66,6 +67,7 @@ class _CategoryEditSheetState extends ConsumerState<CategoryEditSheet> {
       isAntExpense: !widget.isIncome && !_isFixed && _isAnt,
       iconKey: _iconKey,
       colorHex: _colorHex,
+      groupLabel: _groupLabel,
       sortOrder: widget.editing?.sortOrder ?? 0,
       isDefault: widget.editing?.isDefault ?? false,
     );
@@ -146,6 +148,17 @@ class _CategoryEditSheetState extends ConsumerState<CategoryEditSheet> {
               autofocus: !_isEditing,
               textCapitalization: TextCapitalization.sentences,
               decoration: const InputDecoration(labelText: 'Nombre'),
+            ),
+            const SizedBox(height: 16),
+            Text('Grupo', style: theme.textTheme.titleSmall),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              initialValue: _groupLabel,
+              items: [
+                for (final g in categoryGroups)
+                  DropdownMenuItem(value: g, child: Text(g)),
+              ],
+              onChanged: (v) => setState(() => _groupLabel = v ?? 'Otras'),
             ),
             if (!widget.isIncome) ...[
               const SizedBox(height: 16),

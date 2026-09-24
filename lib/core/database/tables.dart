@@ -82,7 +82,10 @@ class Categories extends Table {
       boolean().withDefault(const Constant(false))();
 
   TextColumn get iconKey => text().withDefault(const Constant('category'))();
-  TextColumn get colorHex => text().withDefault(const Constant('#1E6FD9'))();
+    TextColumn get colorHex => text().withDefault(const Constant('#1E6FD9'))();
+
+  /// Grupo para organizar la categoría en pantalla (ver categoryGroups).
+  TextColumn get groupLabel => text().withDefault(const Constant('Otras'))();
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
   BoolColumn get isArchived => boolean().withDefault(const Constant(false))();
   BoolColumn get isDefault => boolean().withDefault(const Constant(false))();

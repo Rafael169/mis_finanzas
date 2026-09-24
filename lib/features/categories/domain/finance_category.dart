@@ -10,6 +10,7 @@ class FinanceCategory {
     this.isAntExpense = false,
     this.iconKey = 'category',
     this.colorHex = '#1E6FD9',
+    this.groupLabel = 'Otras',
     this.sortOrder = 0,
     this.isArchived = false,
     this.isDefault = false,
@@ -31,6 +32,10 @@ class FinanceCategory {
 
   final String iconKey;
   final String colorHex;
+
+  /// Grupo para mostrarla organizada (ver categoryGroups).
+  final String groupLabel;
+
   final int sortOrder;
   final bool isArchived;
   final bool isDefault;

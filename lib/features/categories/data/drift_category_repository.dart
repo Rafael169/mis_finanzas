@@ -34,8 +34,9 @@ class DriftCategoryRepository implements CategoryRepository {
   @override
   Future<int> count() async {
     final total = _db.categories.id.count();
-    final row =
-        await (_db.selectOnly(_db.categories)..addColumns([total])).getSingle();
+    final row = await (_db.selectOnly(
+      _db.categories,
+    )..addColumns([total])).getSingle();
     return row.read(total) ?? 0;
   }
 
@@ -53,6 +54,7 @@ class DriftCategoryRepository implements CategoryRepository {
             isAntExpense: Value(c.isAntExpense),
             iconKey: Value(c.iconKey),
             colorHex: Value(c.colorHex),
+            groupLabel: Value(c.groupLabel),
             sortOrder: Value(c.sortOrder),
             isArchived: Value(c.isArchived),
             isDefault: Value(c.isDefault),
@@ -66,10 +68,11 @@ class DriftCategoryRepository implements CategoryRepository {
   @override
   Future<void> add(FinanceCategory category) async {
     final now = DateTime.now();
-    // Al final de la lista, para no desordenar las existentes.
     final maxOrder = await _maxSortOrder();
 
-    await _db.into(_db.categories).insert(
+    await _db
+        .into(_db.categories)
+        .insert(
           CategoriesCompanion.insert(
             id: category.id,
             name: category.name,
@@ -78,6 +81,7 @@ class DriftCategoryRepository implements CategoryRepository {
             isAntExpense: Value(category.isAntExpense),
             iconKey: Value(category.iconKey),
             colorHex: Value(category.colorHex),
+            groupLabel: Value(category.groupLabel),
             sortOrder: Value(maxOrder + 1),
             createdAt: now,
             updatedAt: now,
@@ -87,14 +91,16 @@ class DriftCategoryRepository implements CategoryRepository {
 
   @override
   Future<void> update(FinanceCategory category) async {
-    await (_db.update(_db.categories)..where((c) => c.id.equals(category.id)))
-        .write(
+    await (_db.update(
+      _db.categories,
+    )..where((c) => c.id.equals(category.id))).write(
       CategoriesCompanion(
         name: Value(category.name),
         isFixed: Value(category.isFixed),
         isAntExpense: Value(category.isAntExpense),
         iconKey: Value(category.iconKey),
         colorHex: Value(category.colorHex),
+        groupLabel: Value(category.groupLabel),
         updatedAt: Value(DateTime.now()),
       ),
     );
@@ -103,36 +109,38 @@ class DriftCategoryRepository implements CategoryRepository {
   @override
   Future<bool> isInUseThisMonth(String categoryId) async {
     final month = YearMonth.now();
-    final period = await (_db.select(_db.financialPeriods)
-          ..where(
-            (p) => p.year.equals(month.year) & p.month.equals(month.month),
-          ))
-        .getSingleOrNull();
+    final period =
+        await (_db.select(_db.financialPeriods)..where(
+              (p) => p.year.equals(month.year) & p.month.equals(month.month),
+            ))
+            .getSingleOrNull();
     if (period == null) return false;
 
-    final hasBudget = await (_db.select(_db.budgetItems)
-          ..where(
-            (b) =>
-                b.periodId.equals(period.id) & b.categoryId.equals(categoryId),
-          ))
-        .get();
+    final hasBudget =
+        await (_db.select(_db.budgetItems)..where(
+              (b) =>
+                  b.periodId.equals(period.id) &
+                  b.categoryId.equals(categoryId),
+            ))
+            .get();
     if (hasBudget.isNotEmpty) return true;
 
-    final hasMovement = await (_db.select(_db.financialTransactions)
-          ..where(
-            (t) =>
-                t.periodId.equals(period.id) &
-                t.categoryId.equals(categoryId) &
-                t.deletedAt.isNull(),
-          ))
-        .get();
+    final hasMovement =
+        await (_db.select(_db.financialTransactions)..where(
+              (t) =>
+                  t.periodId.equals(period.id) &
+                  t.categoryId.equals(categoryId) &
+                  t.deletedAt.isNull(),
+            ))
+            .get();
     return hasMovement.isNotEmpty;
   }
 
   @override
   Future<void> setArchived(String categoryId, bool archived) async {
-    await (_db.update(_db.categories)..where((c) => c.id.equals(categoryId)))
-        .write(
+    await (_db.update(
+      _db.categories,
+    )..where((c) => c.id.equals(categoryId))).write(
       CategoriesCompanion(
         isArchived: Value(archived),
         updatedAt: Value(DateTime.now()),
@@ -142,8 +150,9 @@ class DriftCategoryRepository implements CategoryRepository {
 
   Future<int> _maxSortOrder() async {
     final maxColumn = _db.categories.sortOrder.max();
-    final row =
-        await (_db.selectOnly(_db.categories)..addColumns([maxColumn])).getSingle();
+    final row = await (_db.selectOnly(
+      _db.categories,
+    )..addColumns([maxColumn])).getSingle();
     return row.read(maxColumn) ?? 0;
   }
 
@@ -156,6 +165,7 @@ class DriftCategoryRepository implements CategoryRepository {
       isAntExpense: row.isAntExpense,
       iconKey: row.iconKey,
       colorHex: row.colorHex,
+      groupLabel: row.groupLabel,
       sortOrder: row.sortOrder,
       isArchived: row.isArchived,
       isDefault: row.isDefault,

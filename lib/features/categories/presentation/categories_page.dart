@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/finance_category.dart';
 import 'category_edit_sheet.dart';
+import 'category_grouping.dart';
 import 'category_providers.dart';
 import 'category_visuals.dart';
 
@@ -115,31 +116,42 @@ class _CategoryList extends ConsumerWidget {
 
     final active = categories.where((c) => !c.isArchived).toList();
     final archived = categories.where((c) => c.isArchived).toList();
+    final grouped = groupCategoriesByLabel(active);
 
     return ListView(
       padding: const EdgeInsets.only(bottom: 96),
       children: [
-        for (final c in active)
-          ListTile(
-            leading: CircleAvatar(
-              backgroundColor: categoryColor(c.colorHex)
-                  .withValues(alpha: 0.15),
-              child: Icon(
-                categoryIcon(c.iconKey),
-                color: categoryColor(c.colorHex),
-              ),
+        for (final entry in grouped.entries) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+            child: Text(
+              entry.key,
+              style: Theme.of(context).textTheme.labelLarge
+                  ?.copyWith(color: Theme.of(context).colorScheme.primary),
             ),
-            title: Text(c.name),
-            subtitle: Text(
-              c.isIncome
-                  ? (c.isFixed ? 'Ingreso fijo' : 'Ingreso esporádico')
-                  : [
-                      c.isFixed ? 'Gasto fijo' : 'Gasto variable',
-                      if (c.isAntExpense) 'hormiga',
-                    ].join(' · '),
-            ),
-            onTap: () => onTap(c),
           ),
+          for (final c in entry.value)
+            ListTile(
+              leading: CircleAvatar(
+                backgroundColor: categoryColor(c.colorHex)
+                    .withValues(alpha: 0.15),
+                child: Icon(
+                  categoryIcon(c.iconKey),
+                  color: categoryColor(c.colorHex),
+                ),
+              ),
+              title: Text(c.name),
+              subtitle: Text(
+                c.isIncome
+                    ? (c.isFixed ? 'Ingreso fijo' : 'Ingreso esporádico')
+                    : [
+                        c.isFixed ? 'Gasto fijo' : 'Gasto variable',
+                        if (c.isAntExpense) 'hormiga',
+                      ].join(' · '),
+              ),
+              onTap: () => onTap(c),
+            ),
+        ],
         if (archived.isNotEmpty) ...[
           const Divider(),
           Padding(

@@ -45,11 +45,11 @@ void main() {
   CategoryBudget find(List<CategoryBudget> list, String name) =>
       list.firstWhere((b) => b.category.name == name);
 
-  test('un mes sin datos lista las 14 categorías sin presupuesto ni real',
+  test('un mes sin datos lista las categorías sin presupuesto ni real',
       () async {
     final list = await load(august);
 
-    expect(list, hasLength(14));
+    expect(list, hasLength(49));
     expect(list.every((b) => b.mode == BudgetMode.none), isTrue);
     expect(list.every((b) => b.actualMonth == Money.zero), isTrue);
     // Solo mirar no crea el mes.

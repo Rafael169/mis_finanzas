@@ -30,12 +30,11 @@ void main() {
     expect((await repository.get()).themeMode, AppThemeMode.dark);
   });
 
-  test('migrar de la versión 1 a la 2 conserva los ajustes y agrega el tema',
-      () async {
+  test('migrar de la versión 1 a la 3 conserva los ajustes, agrega el tema y el grupo', () async {
     final db = AppDatabase.forTesting(
       NativeDatabase.memory(
         setup: (rawDb) {
-          // Esquema de la versión 1: sin la columna del tema.
+          // Esquema de la versión 1: sin la columna del tema ni la de grupo.
           rawDb.execute('''
             CREATE TABLE app_settings (
               id TEXT NOT NULL,
@@ -50,10 +49,32 @@ void main() {
               PRIMARY KEY (id)
             )
           ''');
+          rawDb.execute('''
+            CREATE TABLE categories (
+              id TEXT NOT NULL,
+              name TEXT NOT NULL,
+              is_income INTEGER NOT NULL,
+              is_fixed INTEGER NOT NULL DEFAULT 0,
+              is_ant_expense INTEGER NOT NULL DEFAULT 0,
+              icon_key TEXT NOT NULL DEFAULT 'category',
+              color_hex TEXT NOT NULL DEFAULT '#1E6FD9',
+              sort_order INTEGER NOT NULL DEFAULT 0,
+              is_archived INTEGER NOT NULL DEFAULT 0,
+              is_default INTEGER NOT NULL DEFAULT 0,
+              created_at INTEGER NOT NULL,
+              updated_at INTEGER NOT NULL,
+              PRIMARY KEY (id)
+            )
+          ''');
           rawDb.execute(
             "INSERT INTO app_settings "
             "(id, currency_code, onboarding_completed, created_at, updated_at) "
             "VALUES ('settings', 'USD', 1, 1700000000, 1700000000)",
+          );
+          rawDb.execute(
+            "INSERT INTO categories "
+            "(id, name, is_income, created_at, updated_at) "
+            "VALUES ('cat1', 'Arriendo', 0, 1700000000, 1700000000)",
           );
           rawDb.execute('PRAGMA user_version = 1');
         },
@@ -61,10 +82,13 @@ void main() {
     );
     addTearDown(db.close);
 
-    final row = await db.select(db.appSettings).getSingle();
+    final settingsRow = await db.select(db.appSettings).getSingle();
+    expect(settingsRow.currencyCode, 'USD');
+    expect(settingsRow.onboardingCompleted, isTrue);
+    expect(settingsRow.themeMode, 'system');
 
-    expect(row.currencyCode, 'USD');
-    expect(row.onboardingCompleted, isTrue);
-    expect(row.themeMode, 'system');
+    final categoryRow = await db.select(db.categories).getSingle();
+    expect(categoryRow.name, 'Arriendo');
+    expect(categoryRow.groupLabel, 'Otras');
   });
 }

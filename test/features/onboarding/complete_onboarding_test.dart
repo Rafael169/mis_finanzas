@@ -35,14 +35,14 @@ void main() {
     final saved = await settings.get();
     expect(saved.currencyCode, 'USD');
     expect(saved.onboardingCompleted, isTrue);
-    expect(await categories.count(), 14);
+        expect(await categories.count(), 49);
   });
 
   test('repetirlo no duplica las categorías', () async {
     await completeOnboarding(Currency.usd);
     await completeOnboarding(Currency.usd);
 
-    expect(await categories.count(), 14);
+        expect(await categories.count(), 49);
   });
 
   test('conserva los demás ajustes', () async {

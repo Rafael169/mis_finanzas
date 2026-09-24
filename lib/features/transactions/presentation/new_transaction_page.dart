@@ -9,6 +9,7 @@ import '../../../core/domain/money.dart';
 import '../../../core/utils/money_input.dart';
 import '../../../core/utils/money_parser.dart';
 import '../../categories/domain/finance_category.dart';
+import '../../categories/presentation/category_grouping.dart';
 import '../../categories/presentation/category_providers.dart';
 import '../../categories/presentation/category_visuals.dart';
 import '../../settings/presentation/settings_providers.dart';
@@ -22,7 +23,6 @@ import '../data/drift_movement_repository.dart';
 class NewTransactionPage extends ConsumerStatefulWidget {
   const NewTransactionPage({super.key, this.editing});
 
-  /// Si no es null, el formulario edita ese movimiento en lugar de crear uno.
   final MovementItem? editing;
 
   @override
@@ -85,8 +85,6 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
     }
   }
 
-  /// Valida y guarda. Devuelve true si el movimiento quedó guardado.
-  /// Valida y guarda. Devuelve true si el movimiento quedó guardado.
   Future<bool> _save() async {
     final messenger = ScaffoldMessenger.of(context);
     final currency = ref.read(currencyProvider);
@@ -141,7 +139,6 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
 
   void _showAlertsIfAny() {
     final repository = ref.read(movementRepositoryProvider);
-    // El repositorio concreto expone las alertas de la última operación.
     if (repository is! DriftMovementRepository) return;
 
     final alerts = repository.lastAlerts;
@@ -181,7 +178,6 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
     _amountFocus.requestFocus();
   }
 
-  /// Elimina el movimiento que se está editando, con opción de deshacer.
   Future<void> _delete() async {
     final editing = widget.editing;
     if (editing == null) return;
@@ -219,8 +215,6 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
     final format = ref.watch(moneyFormatterProvider);
     final categories = ref.watch(categoriesProvider);
 
-    // Con el teclado abierto no hay espacio: Guardar sube a la barra superior
-    // y los botones de abajo se ocultan.
     final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
 
     final parsed = parseMoneyInput(_amountController.text, currency);
@@ -238,7 +232,6 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
         ),
-
         actions: [
           if (_isEditing)
             IconButton(
@@ -335,32 +328,54 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
                           final options = all
                               .where((c) => c.isIncome == _isIncome)
                               .toList();
-                          return Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
+                          final grouped = groupCategoriesByLabel(options);
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              for (final c in options)
-                                ChoiceChip(
-                                  avatar: Icon(
-                                    categoryIcon(c.iconKey),
-                                    size: 18,
-                                    color: categoryColor(c.colorHex),
+                              for (final entry in grouped.entries) ...[
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: 8,
+                                    bottom: 4,
                                   ),
-                                  label: Text(c.name),
-                                  selected: _categoryId == c.id,
-                                  onSelected: _saving
-                                      ? null
-                                      : (_) {
-                                          setState(() {
-                                            _categoryId = c.id;
-                                            _categoryError = null;
-                                          });
-                                          // Cierra el teclado para que
-                                          // aparezcan los botones de abajo.
-                                          FocusManager.instance.primaryFocus
-                                              ?.unfocus();
-                                        },
+                                  child: Text(
+                                    entry.key,
+                                    style: theme.textTheme.labelMedium
+                                        ?.copyWith(
+                                          color: theme.colorScheme.outline,
+                                        ),
+                                  ),
                                 ),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    for (final c in entry.value)
+                                      ChoiceChip(
+                                        avatar: Icon(
+                                          categoryIcon(c.iconKey),
+                                          size: 18,
+                                          color: categoryColor(c.colorHex),
+                                        ),
+                                        label: Text(c.name),
+                                        selected: _categoryId == c.id,
+                                        onSelected: _saving
+                                            ? null
+                                            : (_) {
+                                                setState(() {
+                                                  _categoryId = c.id;
+                                                  _categoryError = null;
+                                                });
+                                                FocusManager
+                                                    .instance
+                                                    .primaryFocus
+                                                    ?.unfocus();
+                                              },
+                                      ),
+                                  ],
+                                ),
+                              ],
                             ],
                           );
                         },

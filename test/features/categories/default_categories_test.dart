@@ -2,13 +2,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mis_finanzas/features/categories/domain/default_categories.dart';
 
 void main() {
-  test('tiene 14 categorías: 2 de ingreso y 12 de gasto', () {
+  test('tiene 49 categorías: 14 de ingreso y 35 de gasto', () {
     final incomes = defaultCategorySeeds.where((c) => c.isIncome);
     final expenses = defaultCategorySeeds.where((c) => !c.isIncome);
 
-    expect(defaultCategorySeeds, hasLength(14));
-    expect(incomes, hasLength(2));
-    expect(expenses, hasLength(12));
+    expect(defaultCategorySeeds, hasLength(49));
+    expect(incomes, hasLength(14));
+    expect(expenses, hasLength(35));
   });
 
   test('no hay nombres repetidos', () {
@@ -25,11 +25,19 @@ void main() {
     }
   });
 
-  test('Mecatos y Otras D son las únicas categorías hormiga', () {
+  test('las categorías hormiga son las esperadas', () {
     final antNames = defaultCategorySeeds
         .where((c) => c.isAntExpense)
         .map((c) => c.name)
         .toSet();
-    expect(antNames, {'Mecatos', 'Otras D'});
+    expect(antNames, {
+      'Mecatos',
+      'Otras D',
+      'Antojos Diarios',
+      'Suscripciones Digitales',
+      'Comida a Domicilio',
+      'Transporte por Comodidad',
+      'Otros gastos hormiga',
+    });
   });
 }
