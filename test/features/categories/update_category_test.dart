@@ -24,12 +24,14 @@ void main() {
   });
 
   test('crea una categoría nueva al final de la lista', () async {
-    await add(FinanceCategory(
-      id: const Uuid().v4(),
-      name: 'Suscripciones',
-      isIncome: false,
-      isFixed: false,
-    ));
+    await add(
+      FinanceCategory(
+        id: const Uuid().v4(),
+        name: 'Suscripciones',
+        isIncome: false,
+        isFixed: false,
+      ),
+    );
 
     final all = await repository.watchAll().first;
     expect(all, hasLength(1));
@@ -38,34 +40,43 @@ void main() {
 
   test('rechaza un nombre vacío', () async {
     await expectLater(
-      add(FinanceCategory(
-        id: const Uuid().v4(),
-        name: '   ',
-        isIncome: false,
-        isFixed: false,
-      )),
+      add(
+        FinanceCategory(
+          id: const Uuid().v4(),
+          name: '   ',
+          isIncome: false,
+          isFixed: false,
+        ),
+      ),
       throwsA(isA<CategoryException>()),
     );
   });
 
   test('rechaza hormiga en un gasto fijo o en un ingreso', () async {
-    await expectLater(
-      add(FinanceCategory(
+    // El propio modelo FinanceCategory ya protege esta regla al construirse
+    // (assert), antes incluso de llegar a add(). Aquí confirmamos que no
+    // se puede crear una categoría inválida por ningún camino.
+    expect(
+      () => FinanceCategory(
         id: const Uuid().v4(),
         name: 'X',
         isIncome: false,
         isFixed: true,
         isAntExpense: true,
-      )),
-      throwsA(isA<CategoryException>()),
+      ),
+      throwsA(isA<AssertionError>()),
     );
   });
 
   test('editar cambia los datos sin duplicar la fila', () async {
     final id = const Uuid().v4();
-    await add(FinanceCategory(id: id, name: 'Viejo', isIncome: false, isFixed: true));
+    await add(
+      FinanceCategory(id: id, name: 'Viejo', isIncome: false, isFixed: true),
+    );
 
-    await update(FinanceCategory(id: id, name: 'Nuevo', isIncome: false, isFixed: false));
+    await update(
+      FinanceCategory(id: id, name: 'Nuevo', isIncome: false, isFixed: false),
+    );
 
     final all = await repository.watchAll().first;
     expect(all, hasLength(1));

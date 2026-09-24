@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../domain/archive_category.dart';
 import '../domain/finance_category.dart';
 import 'category_edit_sheet.dart';
 import 'category_providers.dart';

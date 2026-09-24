@@ -45,8 +45,8 @@ class AddCategory {
 
   final CategoryRepository _repository;
 
-  Future<void> call(FinanceCategory category) {
-    return _repository.add(_validated(category));
+  Future<void> call(FinanceCategory category) async {
+    await _repository.add(_validated(category));
   }
 }
 
@@ -56,7 +56,7 @@ class UpdateCategory {
 
   final CategoryRepository _repository;
 
-  Future<void> call(FinanceCategory category) {
-    return _repository.update(_validated(category));
+  Future<void> call(FinanceCategory category) async {
+    await _repository.update(_validated(category));
   }
 }

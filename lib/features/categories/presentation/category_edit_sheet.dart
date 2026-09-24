@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
-import '../domain/archive_category.dart';
+
 import '../domain/finance_category.dart';
 import '../domain/update_category.dart';
 import 'category_icons.dart';
