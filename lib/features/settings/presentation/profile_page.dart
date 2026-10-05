@@ -142,6 +142,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ),
                 const Divider(height: 1),
                 ListTile(
+                  leading: const Icon(Icons.add_circle_outline),
+                  title: const Text('Categorías sugeridas'),
+                  subtitle: const Text('Activa más con un toque'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push('/categorias-sugeridas'),
+                ),
+                const Divider(height: 1),
+                ListTile(
                   leading: const Icon(Icons.upload_outlined),
                   title: const Text('Exportar respaldo'),
                   subtitle: const Text('Guarda tus movimientos como CSV'),

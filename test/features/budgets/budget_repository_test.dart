@@ -49,10 +49,9 @@ void main() {
       () async {
     final list = await load(august);
 
-    expect(list, hasLength(49));
+    expect(list, hasLength(15));
     expect(list.every((b) => b.mode == BudgetMode.none), isTrue);
     expect(list.every((b) => b.actualMonth == Money.zero), isTrue);
-    // Solo mirar no crea el mes.
     expect(await db.select(db.financialPeriods).get(), isEmpty);
   });
 
@@ -160,12 +159,12 @@ void main() {
     );
     await saveBudget(
       month: july,
-      category: byName['Mercado']!,
+      category: byName['Restaurantes']!,
       monthly: const Money.fromUnits(300000),
     );
     await saveBudget(
       month: august,
-      category: byName['Mercado']!,
+      category: byName['Restaurantes']!,
       monthly: const Money.fromUnits(350000),
     );
 
@@ -177,9 +176,8 @@ void main() {
       find(list, 'Arriendo').monthlyLimit,
       const Money.fromUnits(500000),
     );
-    // Lo que ya estaba definido no se toca.
     expect(
-      find(list, 'Mercado').monthlyLimit,
+      find(list, 'Restaurantes').monthlyLimit,
       const Money.fromUnits(350000),
     );
 
@@ -213,7 +211,6 @@ void main() {
       throwsA(isA<BudgetException>()),
     );
 
-    // Un monto en cero se toma como quitar: no guarda nada ni crea el mes.
     await saveBudget(month: august, category: rent, monthly: Money.zero);
     expect(await db.select(db.budgetItems).get(), isEmpty);
     expect(await db.select(db.financialPeriods).get(), isEmpty);

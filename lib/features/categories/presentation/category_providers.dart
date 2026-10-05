@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/database_provider.dart';
 import '../data/drift_category_repository.dart';
+import '../domain/add_suggested_category.dart';
 import '../domain/archive_category.dart';
 import '../domain/category_repository.dart';
 import '../domain/finance_category.dart';
@@ -36,4 +37,8 @@ final updateCategoryProvider = Provider<UpdateCategory>((ref) {
 
 final archiveCategoryProvider = Provider<ArchiveCategory>((ref) {
   return ArchiveCategory(ref.watch(categoryRepositoryProvider));
+});
+
+final addSuggestedCategoryProvider = Provider<AddSuggestedCategory>((ref) {
+  return AddSuggestedCategory(ref.watch(categoryRepositoryProvider));
 });

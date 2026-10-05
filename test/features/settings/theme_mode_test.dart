@@ -30,7 +30,10 @@ void main() {
     expect((await repository.get()).themeMode, AppThemeMode.dark);
   });
 
-  test('migrar de la versión 1 a la 3 conserva los ajustes, agrega el tema y el grupo', () async {
+  test(
+      'migrar de la versión 1 a la 3 conserva los ajustes, agrega el tema, '
+      'corrige el grupo de una categoría existente y agrega las nuevas',
+      () async {
     final db = AppDatabase.forTesting(
       NativeDatabase.memory(
         setup: (rawDb) {
@@ -71,6 +74,7 @@ void main() {
             "(id, currency_code, onboarding_completed, created_at, updated_at) "
             "VALUES ('settings', 'USD', 1, 1700000000, 1700000000)",
           );
+          // Una sola categoría preexistente, sin grupo asignado todavía.
           rawDb.execute(
             "INSERT INTO categories "
             "(id, name, is_income, created_at, updated_at) "
@@ -82,13 +86,21 @@ void main() {
     );
     addTearDown(db.close);
 
+    // Los ajustes se conservan y ganan el nuevo campo de tema.
     final settingsRow = await db.select(db.appSettings).getSingle();
     expect(settingsRow.currencyCode, 'USD');
     expect(settingsRow.onboardingCompleted, isTrue);
     expect(settingsRow.themeMode, 'system');
 
-    final categoryRow = await db.select(db.categories).getSingle();
-    expect(categoryRow.name, 'Arriendo');
-    expect(categoryRow.groupLabel, 'Otras');
+    // La categoría preexistente conserva su nombre y recibe su grupo correcto.
+    final allCategories = await db.select(db.categories).get();
+    final rent = allCategories.firstWhere((c) => c.name == 'Arriendo');
+    expect(rent.groupLabel, 'Gastos Fijos');
+
+    // El catálogo por defecto se completó con las categorías que faltaban
+    // (todas menos 'Arriendo', que ya existía).
+    expect(allCategories.length, greaterThan(1));
+    expect(allCategories.any((c) => c.name == 'Salario'), isTrue);
+    expect(allCategories.any((c) => c.name == 'Mecatos'), isTrue);
   });
 }

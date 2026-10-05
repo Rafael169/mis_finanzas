@@ -19,10 +19,11 @@ class CategorySeed {
   final String groupLabel;
 }
 
-/// Catálogo inicial. Se crea una sola vez, al terminar la bienvenida.
-/// El orden de la lista es el orden en que se muestran por defecto.
+/// Catálogo básico. Se crea una sola vez, al terminar la bienvenida.
+/// El resto de categorías disponibles vive en suggestedCategorySeeds y se
+/// agregan manualmente desde Perfil → Categorías sugeridas.
 const List<CategorySeed> defaultCategorySeeds = [
-  // --- Catálogo original ---
+  // --- Ingresos ---
   CategorySeed(
     'Salario',
     isIncome: true,
@@ -39,6 +40,8 @@ const List<CategorySeed> defaultCategorySeeds = [
     colorHex: '#5BBF85',
     groupLabel: 'Ingresos Variables y Extras',
   ),
+
+  // --- Gastos Fijos ---
   CategorySeed(
     'Arriendo',
     isIncome: false,
@@ -48,27 +51,19 @@ const List<CategorySeed> defaultCategorySeeds = [
     groupLabel: 'Gastos Fijos',
   ),
   CategorySeed(
-    'EPM',
+    'Servicios Públicos',
     isIncome: false,
     isFixed: true,
     iconKey: 'bolt',
-    colorHex: '#F2A900',
+    colorHex: '#1E6FD9',
     groupLabel: 'Gastos Fijos',
   ),
   CategorySeed(
-    'FNA',
+    'Alimentación',
     isIncome: false,
     isFixed: true,
-    iconKey: 'account_balance',
-    colorHex: '#6C5CE7',
-    groupLabel: 'Gastos Fijos',
-  ),
-  CategorySeed(
-    'JFK',
-    isIncome: false,
-    isFixed: true,
-    iconKey: 'payments',
-    colorHex: '#00A6A6',
+    iconKey: 'shopping_cart',
+    colorHex: '#1E6FD9',
     groupLabel: 'Gastos Fijos',
   ),
   CategorySeed(
@@ -76,77 +71,99 @@ const List<CategorySeed> defaultCategorySeeds = [
     isIncome: false,
     isFixed: true,
     iconKey: 'wifi',
-    colorHex: '#3D8BFD',
+    colorHex: '#1E6FD9',
     groupLabel: 'Gastos Fijos',
   ),
   CategorySeed(
-    'TV',
+    'Transporte Obligatorio',
     isIncome: false,
     isFixed: true,
-    iconKey: 'tv',
-    colorHex: '#8E5CF7',
-    groupLabel: 'Gastos Fijos',
-  ),
-  CategorySeed(
-    'GYM',
-    isIncome: false,
-    isFixed: true,
-    iconKey: 'fitness_center',
-    colorHex: '#E8590C',
-    groupLabel: 'Gastos Fijos',
-  ),
-  CategorySeed(
-    'Mercado',
-    isIncome: false,
-    isFixed: false,
-    iconKey: 'shopping_cart',
-    colorHex: '#2F9E44',
-    groupLabel: 'Gastos Variables',
-  ),
-  CategorySeed(
-    'Transporte',
-    isIncome: false,
-    isFixed: false,
     iconKey: 'directions_bus',
-    colorHex: '#1C7ED6',
-    groupLabel: 'Gastos Variables',
+    colorHex: '#1E6FD9',
+    groupLabel: 'Gastos Fijos',
   ),
+
+  // --- Deudas ---
+  CategorySeed(
+    'Tarjetas de Crédito',
+    isIncome: false,
+    isFixed: true,
+    iconKey: 'credit_card',
+    colorHex: '#D64545',
+    groupLabel: 'Deudas',
+  ),
+
+  // --- Gastos Variables ---
   CategorySeed(
     'Ropa',
     isIncome: false,
     isFixed: false,
     iconKey: 'checkroom',
-    colorHex: '#D6336C',
+    colorHex: '#F2A900',
     groupLabel: 'Gastos Variables',
   ),
+  CategorySeed(
+    'Restaurantes',
+    isIncome: false,
+    isFixed: false,
+    iconKey: 'restaurant',
+    colorHex: '#F2A900',
+    groupLabel: 'Gastos Variables',
+  ),
+  CategorySeed(
+    'Ocio y Entretenimiento',
+    isIncome: false,
+    isFixed: false,
+    iconKey: 'movie',
+    colorHex: '#F2A900',
+    groupLabel: 'Gastos Variables',
+  ),
+
+  // --- Hormiga y Fantasma ---
   CategorySeed(
     'Mecatos',
     isIncome: false,
     isFixed: false,
     isAntExpense: true,
     iconKey: 'fastfood',
-    colorHex: '#F76707',
+    colorHex: '#E8590C',
     groupLabel: 'Hormiga y Fantasma',
   ),
   CategorySeed(
-    'Otras D',
+    'Suscripciones Digitales',
     isIncome: false,
     isFixed: false,
     isAntExpense: true,
-    iconKey: 'more_horiz',
-    colorHex: '#868E96',
+    iconKey: 'subscriptions',
+    colorHex: '#E8590C',
+    groupLabel: 'Hormiga y Fantasma',
+  ),
+  CategorySeed(
+    'Comida a Domicilio',
+    isIncome: false,
+    isFixed: false,
+    isAntExpense: true,
+    iconKey: 'delivery_dining',
+    colorHex: '#E8590C',
     groupLabel: 'Hormiga y Fantasma',
   ),
 
-  // --- Ingresos Fijos ---
+  // --- Ahorro e Inversión ---
   CategorySeed(
-    'Salario base (Sueldo neto)',
-    isIncome: true,
-    isFixed: true,
-    iconKey: 'work',
-    colorHex: '#2E9E5B',
-    groupLabel: 'Ingresos Fijos',
+    'Fondo de Emergencia',
+    isIncome: false,
+    isFixed: false,
+    iconKey: 'savings',
+    colorHex: '#2F9E44',
+    groupLabel: 'Ahorro e Inversión',
   ),
+];
+
+/// Categorías sugeridas: el resto del catálogo completo, disponibles para
+/// agregar manualmente desde Perfil → Categorías sugeridas. No se crean
+/// solas; el usuario decide cuáles activar.
+const List<CategorySeed> suggestedCategorySeeds = [
+  // --- Ingresos Fijos ---
   CategorySeed(
     'Honorarios profesionales fijos',
     isIncome: true,
@@ -242,7 +259,7 @@ const List<CategorySeed> defaultCategorySeeds = [
     groupLabel: 'Ingresos Pasivos',
   ),
 
-  // --- Gastos Fijos ---
+  // --- Gastos Fijos adicionales ---
   CategorySeed(
     'Vivienda',
     isIncome: false,
@@ -252,27 +269,19 @@ const List<CategorySeed> defaultCategorySeeds = [
     groupLabel: 'Gastos Fijos',
   ),
   CategorySeed(
-    'Servicios Públicos',
+    'GYM',
     isIncome: false,
     isFixed: true,
-    iconKey: 'bolt',
-    colorHex: '#1E6FD9',
+    iconKey: 'fitness_center',
+    colorHex: '#E8590C',
     groupLabel: 'Gastos Fijos',
   ),
   CategorySeed(
-    'Alimentación',
+    'TV',
     isIncome: false,
     isFixed: true,
-    iconKey: 'shopping_cart',
-    colorHex: '#1E6FD9',
-    groupLabel: 'Gastos Fijos',
-  ),
-  CategorySeed(
-    'Transporte Obligatorio',
-    isIncome: false,
-    isFixed: true,
-    iconKey: 'directions_bus',
-    colorHex: '#1E6FD9',
+    iconKey: 'tv',
+    colorHex: '#8E5CF7',
     groupLabel: 'Gastos Fijos',
   ),
   CategorySeed(
@@ -292,15 +301,7 @@ const List<CategorySeed> defaultCategorySeeds = [
     groupLabel: 'Gastos Fijos',
   ),
 
-  // --- Deudas ---
-  CategorySeed(
-    'Tarjetas de Crédito',
-    isIncome: false,
-    isFixed: true,
-    iconKey: 'credit_card',
-    colorHex: '#D64545',
-    groupLabel: 'Deudas',
-  ),
+  // --- Deudas adicionales ---
   CategorySeed(
     'Préstamos Personales',
     isIncome: false,
@@ -326,23 +327,7 @@ const List<CategorySeed> defaultCategorySeeds = [
     groupLabel: 'Deudas',
   ),
 
-  // --- Gastos Variables ---
-  CategorySeed(
-    'Ocio y Entretenimiento',
-    isIncome: false,
-    isFixed: false,
-    iconKey: 'movie',
-    colorHex: '#F2A900',
-    groupLabel: 'Gastos Variables',
-  ),
-  CategorySeed(
-    'Restaurantes',
-    isIncome: false,
-    isFixed: false,
-    iconKey: 'restaurant',
-    colorHex: '#F2A900',
-    groupLabel: 'Gastos Variables',
-  ),
+  // --- Gastos Variables adicionales ---
   CategorySeed(
     'Cuidado Personal',
     isIncome: false,
@@ -360,31 +345,13 @@ const List<CategorySeed> defaultCategorySeeds = [
     groupLabel: 'Gastos Variables',
   ),
 
-  // --- Hormiga y Fantasma ---
+  // --- Hormiga y Fantasma adicionales ---
   CategorySeed(
     'Antojos Diarios',
     isIncome: false,
     isFixed: false,
     isAntExpense: true,
     iconKey: 'local_cafe',
-    colorHex: '#E8590C',
-    groupLabel: 'Hormiga y Fantasma',
-  ),
-  CategorySeed(
-    'Suscripciones Digitales',
-    isIncome: false,
-    isFixed: false,
-    isAntExpense: true,
-    iconKey: 'subscriptions',
-    colorHex: '#E8590C',
-    groupLabel: 'Hormiga y Fantasma',
-  ),
-  CategorySeed(
-    'Comida a Domicilio',
-    isIncome: false,
-    isFixed: false,
-    isAntExpense: true,
-    iconKey: 'delivery_dining',
     colorHex: '#E8590C',
     groupLabel: 'Hormiga y Fantasma',
   ),
@@ -407,15 +374,7 @@ const List<CategorySeed> defaultCategorySeeds = [
     groupLabel: 'Hormiga y Fantasma',
   ),
 
-  // --- Ahorro e Inversión ---
-  CategorySeed(
-    'Fondo de Emergencia',
-    isIncome: false,
-    isFixed: false,
-    iconKey: 'savings',
-    colorHex: '#2F9E44',
-    groupLabel: 'Ahorro e Inversión',
-  ),
+  // --- Ahorro e Inversión adicionales ---
   CategorySeed(
     'Ahorro con Propósito',
     isIncome: false,
@@ -439,5 +398,21 @@ const List<CategorySeed> defaultCategorySeeds = [
     iconKey: 'event_repeat',
     colorHex: '#2F9E44',
     groupLabel: 'Ahorro e Inversión',
+  ),
+  CategorySeed(
+    'GYM',
+    isIncome: false,
+    isFixed: true,
+    iconKey: 'fitness_center',
+    colorHex: '#E8590C',
+    groupLabel: 'Gastos Fijos',
+  ),
+  CategorySeed(
+    'TV',
+    isIncome: false,
+    isFixed: true,
+    iconKey: 'tv',
+    colorHex: '#8E5CF7',
+    groupLabel: 'Gastos Fijos',
   ),
 ];

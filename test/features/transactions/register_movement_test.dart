@@ -78,23 +78,25 @@ void main() {
     expect(summary.balance, const Money.fromUnits(1269841));
   });
 
-  test('el corte se decide por el día: el 15 es Corte 1 y el 16 Corte 2',
-      () async {
-    await register(
-      category: byName['Mecatos']!,
-      amount: const Money.fromUnits(1000),
-      date: DateTime(2026, 8, 15),
-    );
-    await register(
-      category: byName['Mecatos']!,
-      amount: const Money.fromUnits(2000),
-      date: DateTime(2026, 8, 16),
-    );
+  test(
+    'el corte se decide por el día: el 15 es Corte 1 y el 16 Corte 2',
+    () async {
+      await register(
+        category: byName['Mecatos']!,
+        amount: const Money.fromUnits(1000),
+        date: DateTime(2026, 8, 15),
+      );
+      await register(
+        category: byName['Mecatos']!,
+        amount: const Money.fromUnits(2000),
+        date: DateTime(2026, 8, 16),
+      );
 
-    final rows = await db.select(db.financialTransactions).get();
-    final cutByAmount = {for (final r in rows) r.amount: r.cutNumber};
-    expect(cutByAmount, {100000: 1, 200000: 2});
-  });
+      final rows = await db.select(db.financialTransactions).get();
+      final cutByAmount = {for (final r in rows) r.amount: r.cutNumber};
+      expect(cutByAmount, {100000: 1, 200000: 2});
+    },
+  );
 
   test('los totales por categoría y corte se acumulan', () async {
     final snacks = byName['Mecatos']!;
@@ -128,12 +130,12 @@ void main() {
 
   test('movimientos de meses distintos crean períodos distintos', () async {
     await register(
-      category: byName['Mercado']!,
+      category: byName['Restaurantes']!,
       amount: const Money.fromUnits(100000),
       date: DateTime(2026, 8, 5),
     );
     await register(
-      category: byName['Mercado']!,
+      category: byName['Restaurantes']!,
       amount: const Money.fromUnits(50000),
       date: DateTime(2026, 9, 5),
     );
@@ -141,8 +143,9 @@ void main() {
     expect(await db.select(db.financialPeriods).get(), hasLength(2));
 
     final august = await periods.watchSummary(const YearMonth(2026, 8)).first;
-    final september =
-        await periods.watchSummary(const YearMonth(2026, 9)).first;
+    final september = await periods
+        .watchSummary(const YearMonth(2026, 9))
+        .first;
     expect(august.expense, const Money.fromUnits(100000));
     expect(september.expense, const Money.fromUnits(50000));
   });
@@ -189,7 +192,6 @@ void main() {
   });
 
   test('si algo falla no queda nada a medias, ni siquiera el mes', () async {
-    // Esta categoría no existe en la base: la clave foránea falla al guardar.
     const ghost = FinanceCategory(
       id: 'no-existe',
       name: 'Fantasma',

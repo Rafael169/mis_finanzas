@@ -42,10 +42,10 @@ void main() {
   }
 
   test('devuelve solo los movimientos del mes pedido', () async {
-    await spend('Mercado', 1000, DateTime(2026, 7, 31));
-    await spend('Mercado', 2000, DateTime(2026, 8, 1));
-    await spend('Mercado', 3000, DateTime(2026, 8, 31));
-    await spend('Mercado', 4000, DateTime(2026, 9, 1));
+    await spend('Restaurantes', 1000, DateTime(2026, 7, 31));
+    await spend('Restaurantes', 2000, DateTime(2026, 8, 1));
+    await spend('Restaurantes', 3000, DateTime(2026, 8, 31));
+    await spend('Restaurantes', 4000, DateTime(2026, 9, 1));
 
     final august = await reader.watchMonth(const YearMonth(2026, 8)).first;
 
@@ -56,9 +56,9 @@ void main() {
   });
 
   test('ordena del más reciente al más antiguo', () async {
-    await spend('Mercado', 1000, DateTime(2026, 8, 5));
-    await spend('Mercado', 2000, DateTime(2026, 8, 20));
-    await spend('Mercado', 3000, DateTime(2026, 8, 12));
+    await spend('Restaurantes', 1000, DateTime(2026, 8, 5));
+    await spend('Restaurantes', 2000, DateTime(2026, 8, 20));
+    await spend('Restaurantes', 3000, DateTime(2026, 8, 12));
 
     final items = await reader.watchMonth(const YearMonth(2026, 8)).first;
 
@@ -87,8 +87,8 @@ void main() {
   });
 
   test('no incluye movimientos eliminados', () async {
-    await spend('Mercado', 1000, DateTime(2026, 8, 5));
-    await spend('Mercado', 2000, DateTime(2026, 8, 6));
+    await spend('Restaurantes', 1000, DateTime(2026, 8, 5));
+    await spend('Restaurantes', 2000, DateTime(2026, 8, 6));
 
     // Simula un borrado lógico marcando todos los movimientos.
     await db.update(db.financialTransactions).write(

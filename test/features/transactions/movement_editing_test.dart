@@ -41,8 +41,6 @@ void main() {
     await db.close();
   });
 
-  /// Registra un gasto y devuelve su id (los tests usan un solo movimiento
-  /// por mes, así que es el primero de la lista).
   Future<String> addExpense(String category, int units, DateTime date) async {
     await register(
       category: byName[category]!,
@@ -71,25 +69,24 @@ void main() {
     expect(s.antExpense, const Money.fromUnits(30000));
   });
 
-  test(
-    'cambiar de categoría hormiga a otra la quita del gasto hormiga',
-    () async {
-      final id = await addExpense('Mecatos', 50000, DateTime(2026, 8, 20));
+  test('cambiar de categoría hormiga a otra la quita del gasto hormiga',
+      () async {
+    final id = await addExpense('Mecatos', 50000, DateTime(2026, 8, 20));
 
-      await update(
-        id: id,
-        category: byName['Mercado']!,
-        amount: const Money.fromUnits(50000),
-        date: DateTime(2026, 8, 20),
-      );
+    await update(
+      id: id,
+      category: byName['Restaurantes']!,
+      amount: const Money.fromUnits(50000),
+      date: DateTime(2026, 8, 20),
+    );
 
-      final s = await summary(2026, 8);
-      expect(s.expense, const Money.fromUnits(50000));
-      expect(s.antExpense, Money.zero);
-    },
-  );
+    final s = await summary(2026, 8);
+    expect(s.expense, const Money.fromUnits(50000));
+    expect(s.antExpense, Money.zero);
+  });
 
-  test('cambiar de gasto a ingreso mueve el monto entre los totales', () async {
+  test('cambiar de gasto a ingreso mueve el monto entre los totales',
+      () async {
     final id = await addExpense('Mecatos', 50000, DateTime(2026, 8, 20));
 
     await update(
@@ -107,73 +104,65 @@ void main() {
     expect(s.balance, const Money.fromUnits(50000));
   });
 
-  test(
-    'cambiar la fecha a otro mes mueve los totales entre los meses',
-    () async {
-      final id = await addExpense('Mecatos', 50000, DateTime(2026, 8, 20));
+  test('cambiar la fecha a otro mes mueve los totales entre los meses',
+      () async {
+    final id = await addExpense('Mecatos', 50000, DateTime(2026, 8, 20));
 
-      await update(
-        id: id,
-        category: byName['Mecatos']!,
-        amount: const Money.fromUnits(50000),
-        date: DateTime(2026, 9, 3),
-      );
+    await update(
+      id: id,
+      category: byName['Mecatos']!,
+      amount: const Money.fromUnits(50000),
+      date: DateTime(2026, 9, 3),
+    );
 
-      final august = await summary(2026, 8);
-      final september = await summary(2026, 9);
-      expect(august.expense, Money.zero);
-      expect(august.antExpense, Money.zero);
-      expect(september.expense, const Money.fromUnits(50000));
-      expect(september.antExpense, const Money.fromUnits(50000));
+    final august = await summary(2026, 8);
+    final september = await summary(2026, 9);
+    expect(august.expense, Money.zero);
+    expect(august.antExpense, Money.zero);
+    expect(september.expense, const Money.fromUnits(50000));
+    expect(september.antExpense, const Money.fromUnits(50000));
 
-      expect(await db.select(db.financialPeriods).get(), hasLength(2));
-      // Solo queda el total del mes nuevo.
-      expect(await db.select(db.categoryPeriodTotals).get(), hasLength(1));
-    },
-  );
+    expect(await db.select(db.financialPeriods).get(), hasLength(2));
+    expect(await db.select(db.categoryPeriodTotals).get(), hasLength(1));
+  });
 
-  test(
-    'cambiar la fecha de la primera a la segunda quincena cambia el corte',
-    () async {
-      final id = await addExpense('Mecatos', 50000, DateTime(2026, 8, 10));
+  test('cambiar la fecha de la primera a la segunda quincena cambia el corte',
+      () async {
+    final id = await addExpense('Mecatos', 50000, DateTime(2026, 8, 10));
 
-      await update(
-        id: id,
-        category: byName['Mecatos']!,
-        amount: const Money.fromUnits(50000),
-        date: DateTime(2026, 8, 20),
-      );
+    await update(
+      id: id,
+      category: byName['Mecatos']!,
+      amount: const Money.fromUnits(50000),
+      date: DateTime(2026, 8, 20),
+    );
 
-      final rows = await db.select(db.financialTransactions).get();
-      expect(rows.single.cutNumber, 2);
+    final rows = await db.select(db.financialTransactions).get();
+    expect(rows.single.cutNumber, 2);
 
-      final totals = await db.select(db.categoryPeriodTotals).get();
-      expect(totals, hasLength(1));
-      expect(totals.single.cutNumber, 2);
-      expect(totals.single.actualTotal, 5000000);
-    },
-  );
+    final totals = await db.select(db.categoryPeriodTotals).get();
+    expect(totals, hasLength(1));
+    expect(totals.single.cutNumber, 2);
+    expect(totals.single.actualTotal, 5000000);
+  });
 
-  test(
-    'borrar oculta el movimiento, lo resta de los totales y lo conserva',
-    () async {
-      final id = await addExpense('Mecatos', 50000, DateTime(2026, 8, 20));
+  test('borrar oculta el movimiento, lo resta de los totales y lo conserva',
+      () async {
+    final id = await addExpense('Mecatos', 50000, DateTime(2026, 8, 20));
 
-      await repository.softDelete(id);
+    await repository.softDelete(id);
 
-      final s = await summary(2026, 8);
-      expect(s.expense, Money.zero);
-      expect(s.antExpense, Money.zero);
+    final s = await summary(2026, 8);
+    expect(s.expense, Money.zero);
+    expect(s.antExpense, Money.zero);
 
-      expect(await reader.watchMonth(const YearMonth(2026, 8)).first, isEmpty);
-      expect(await db.select(db.categoryPeriodTotals).get(), isEmpty);
+    expect(await reader.watchMonth(const YearMonth(2026, 8)).first, isEmpty);
+    expect(await db.select(db.categoryPeriodTotals).get(), isEmpty);
 
-      // Sigue en la base, solo marcado como eliminado.
-      final rows = await db.select(db.financialTransactions).get();
-      expect(rows, hasLength(1));
-      expect(rows.single.deletedAt, isNotNull);
-    },
-  );
+    final rows = await db.select(db.financialTransactions).get();
+    expect(rows, hasLength(1));
+    expect(rows.single.deletedAt, isNotNull);
+  });
 
   test('deshacer un borrado devuelve el movimiento y los totales', () async {
     final id = await addExpense('Mecatos', 50000, DateTime(2026, 8, 20));
@@ -205,22 +194,20 @@ void main() {
     );
   });
 
-  test(
-    'getById devuelve el movimiento, y null si no existe o se borró',
-    () async {
-      final id = await addExpense('Mecatos', 50000, DateTime(2026, 8, 20));
+  test('getById devuelve el movimiento, y null si no existe o se borró',
+      () async {
+    final id = await addExpense('Mecatos', 50000, DateTime(2026, 8, 20));
 
-      final found = await reader.getById(id);
-      expect(found, isNotNull);
-      expect(found!.categoryName, 'Mecatos');
-      expect(found.amount, const Money.fromUnits(50000));
+    final found = await reader.getById(id);
+    expect(found, isNotNull);
+    expect(found!.categoryName, 'Mecatos');
+    expect(found.amount, const Money.fromUnits(50000));
 
-      expect(await reader.getById('no-existe'), isNull);
+    expect(await reader.getById('no-existe'), isNull);
 
-      await repository.softDelete(id);
-      expect(await reader.getById(id), isNull);
-    },
-  );
+    await repository.softDelete(id);
+    expect(await reader.getById(id), isNull);
+  });
 
   test('editar con un monto en cero se rechaza y no cambia nada', () async {
     final id = await addExpense('Mecatos', 50000, DateTime(2026, 8, 20));

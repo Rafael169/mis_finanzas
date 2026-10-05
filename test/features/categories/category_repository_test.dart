@@ -54,25 +54,20 @@ void main() {
     expect(result.map((c) => c.name), ['Primera', 'Segunda', 'Tercera']);
   });
 
-  test('sembrar categorías por defecto crea las 49 la primera vez', () async {
+  test('sembrar categorías por defecto crea las 15 la primera vez', () async {
     final seed = SeedDefaultCategories(repository);
 
     final created = await seed();
 
     expect(created, isTrue);
-    expect(await repository.count(), 49);
+    expect(await repository.count(), 15);
 
     final categories = await repository.watchActive().first;
     expect(categories.first.name, 'Salario');
-    expect(categories.where((c) => c.isAntExpense).map((c) => c.name).toSet(), {
-      'Mecatos',
-      'Otras D',
-      'Antojos Diarios',
-      'Suscripciones Digitales',
-      'Comida a Domicilio',
-      'Transporte por Comodidad',
-      'Otros gastos hormiga',
-    });
+        expect(
+      categories.where((c) => c.isAntExpense).map((c) => c.name).toSet(),
+      {'Mecatos', 'Suscripciones Digitales', 'Comida a Domicilio'},
+    );
   });
 
   test('sembrar dos veces no duplica las categorías', () async {
@@ -81,6 +76,6 @@ void main() {
     final secondTime = await seed();
 
     expect(secondTime, isFalse);
-    expect(await repository.count(), 49);
+    expect(await repository.count(), 15);
   });
 }

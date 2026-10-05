@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/analytics/presentation/analytics_page.dart';
 import '../../features/budgets/presentation/budgets_page.dart';
+import '../../features/categories/presentation/categories_page.dart';
+import '../../features/categories/presentation/suggested_categories_page.dart';
 import '../../features/dashboard/presentation/home_page.dart';
 import '../../features/onboarding/presentation/onboarding_page.dart';
 import '../../features/onboarding/presentation/splash_page.dart';
@@ -12,11 +14,9 @@ import '../../features/settings/presentation/settings_providers.dart';
 import '../../features/transactions/presentation/edit_transaction_page.dart';
 import '../../features/transactions/presentation/movements_page.dart';
 import '../../features/transactions/presentation/new_transaction_page.dart';
-import '../../features/categories/presentation/categories_page.dart';
 import 'app_shell.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  // Avisa al router cuando cambian los ajustes, para que reevalúe el redirect.
   final refresh = ValueNotifier<int>(0);
   ref.listen(userSettingsProvider, (previous, next) => refresh.value++);
   ref.onDispose(refresh.dispose);
@@ -28,17 +28,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final settings = ref.read(userSettingsProvider);
       final location = state.matchedLocation;
 
-      // 1. Ajustes aún cargando: pantalla de carga.
       if (!settings.hasValue) {
         return location == '/cargando' ? null : '/cargando';
       }
 
-      // 2. Bienvenida sin completar: siempre a la bienvenida.
       if (!settings.requireValue.onboardingCompleted) {
         return location == '/bienvenida' ? null : '/bienvenida';
       }
 
-      // 3. Ya completada: no se vuelve a las pantallas de arranque.
       if (location == '/cargando' || location == '/bienvenida') {
         return '/inicio';
       }
@@ -99,19 +96,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-      // Fuera de la barra de navegación: se abren a pantalla completa.
       GoRoute(
         path: '/nuevo-movimiento',
         builder: (context, state) => const NewTransactionPage(),
       ),
       GoRoute(
         path: '/editar-movimiento/:id',
-        builder: (context, state) =>
-            EditTransactionPage(movementId: state.pathParameters['id']!),
+        builder: (context, state) => EditTransactionPage(
+          movementId: state.pathParameters['id']!,
+        ),
       ),
       GoRoute(
         path: '/categorias',
         builder: (context, state) => const CategoriesPage(),
+      ),
+      GoRoute(
+        path: '/categorias-sugeridas',
+        builder: (context, state) => const SuggestedCategoriesPage(),
       ),
     ],
   );

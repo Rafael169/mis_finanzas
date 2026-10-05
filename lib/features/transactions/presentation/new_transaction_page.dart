@@ -8,18 +8,22 @@ import '../../../core/domain/cut_rule.dart';
 import '../../../core/domain/money.dart';
 import '../../../core/utils/money_input.dart';
 import '../../../core/utils/money_parser.dart';
+import '../../budgets/domain/budget_alert.dart';
 import '../../categories/domain/finance_category.dart';
-import '../../categories/presentation/category_grouping.dart';
 import '../../categories/presentation/category_providers.dart';
 import '../../categories/presentation/category_visuals.dart';
 import '../../settings/presentation/settings_providers.dart';
+import '../data/drift_movement_repository.dart';
 import '../domain/movement_item.dart';
 import '../domain/register_movement.dart';
 import 'movement_providers.dart';
-import '../../budgets/domain/budget_alert.dart';
-import '../data/drift_movement_repository.dart';
 
 /// Formulario para registrar un ingreso o un gasto, o para editar uno.
+///
+/// Orden: Tipo -> Categoría (grilla de iconos) -> Monto -> Fecha ->
+/// Descripción. Elegir la categoría primero evita tener que subir y bajar
+/// la pantalla, porque el monto aparece justo debajo, ya con el teclado
+/// enfocado.
 class NewTransactionPage extends ConsumerStatefulWidget {
   const NewTransactionPage({super.key, this.editing});
 
@@ -70,6 +74,15 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
     _descriptionController.dispose();
     _amountFocus.dispose();
     super.dispose();
+  }
+
+  void _selectCategory(String id) {
+    setState(() {
+      _categoryId = id;
+      _categoryError = null;
+    });
+    // Tras elegir la categoría, el siguiente paso natural es el monto.
+    _amountFocus.requestFocus();
   }
 
   Future<void> _pickDate() async {
@@ -167,15 +180,13 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
   Future<void> _saveAndAddAnother() async {
     final messenger = ScaffoldMessenger.of(context);
     if (!await _save()) return;
-    messenger.showSnackBar(
-      const SnackBar(content: Text('Movimiento guardado')),
-    );
+    messenger.showSnackBar(const SnackBar(content: Text('Movimiento guardado')));
     if (!mounted) return;
     setState(() {
       _amountController.clear();
       _descriptionController.clear();
+      _categoryId = null;
     });
-    _amountFocus.requestFocus();
   }
 
   Future<void> _delete() async {
@@ -215,12 +226,9 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
     final format = ref.watch(moneyFormatterProvider);
     final categories = ref.watch(categoriesProvider);
 
-    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
-
     final parsed = parseMoneyInput(_amountController.text, currency);
-    final preview = (parsed != null && parsed > Money.zero)
-        ? format(parsed)
-        : null;
+    final preview =
+        (parsed != null && parsed > Money.zero) ? format(parsed) : null;
 
     final today = _dayOf(DateTime.now());
     final yesterday = DateTime(today.year, today.month, today.day - 1);
@@ -239,21 +247,7 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
               icon: const Icon(Icons.delete_outline),
               onPressed: _saving ? null : _delete,
             ),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 150),
-            transitionBuilder: (child, animation) =>
-                FadeTransition(opacity: animation, child: child),
-            child: keyboardOpen
-                ? Padding(
-                    key: const ValueKey('save'),
-                    padding: const EdgeInsets.only(right: 8),
-                    child: FilledButton(
-                      onPressed: _saving ? null : _saveAndClose,
-                      child: const Text('Guardar'),
-                    ),
-                  )
-                : const SizedBox(key: ValueKey('empty')),
-          ),
+          _SaveAppBarAction(saving: _saving, onSave: _saveAndClose),
         ],
       ),
       body: SafeArea(
@@ -289,10 +283,46 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
                         }),
                       ),
                       const SizedBox(height: 20),
+                      Text('Categoría', style: theme.textTheme.titleMedium),
+                      const SizedBox(height: 8),
+                      categories.when(
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        error: (_, _) => const Text(
+                          'No se pudieron cargar las categorías.',
+                        ),
+                        data: (all) {
+                          final options = all
+                              .where((c) => c.isIncome == _isIncome)
+                              .toList();
+                          return Wrap(
+                            spacing: 12,
+                            runSpacing: 16,
+                            children: [
+                              for (final c in options)
+                                _CategoryIconButton(
+                                  category: c,
+                                  selected: _categoryId == c.id,
+                                  onTap: _saving
+                                      ? null
+                                      : () => _selectCategory(c.id),
+                                ),
+                            ],
+                          );
+                        },
+                      ),
+                      if (_categoryError != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            _categoryError!,
+                            style: TextStyle(color: theme.colorScheme.error),
+                          ),
+                        ),
+                      const SizedBox(height: 24),
                       TextField(
                         controller: _amountController,
                         focusNode: _amountFocus,
-                        autofocus: !_isEditing,
                         textInputAction: TextInputAction.done,
                         keyboardType: TextInputType.numberWithOptions(
                           decimal: currency.displayDecimals > 0,
@@ -316,78 +346,6 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
                         ),
                         onChanged: (_) => setState(() => _amountError = null),
                       ),
-                      const SizedBox(height: 20),
-                      Text('Categoría', style: theme.textTheme.titleMedium),
-                      const SizedBox(height: 8),
-                      categories.when(
-                        loading: () =>
-                            const Center(child: CircularProgressIndicator()),
-                        error: (_, _) =>
-                            const Text('No se pudieron cargar las categorías.'),
-                        data: (all) {
-                          final options = all
-                              .where((c) => c.isIncome == _isIncome)
-                              .toList();
-                          final grouped = groupCategoriesByLabel(options);
-
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              for (final entry in grouped.entries) ...[
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                    top: 8,
-                                    bottom: 4,
-                                  ),
-                                  child: Text(
-                                    entry.key,
-                                    style: theme.textTheme.labelMedium
-                                        ?.copyWith(
-                                          color: theme.colorScheme.outline,
-                                        ),
-                                  ),
-                                ),
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  children: [
-                                    for (final c in entry.value)
-                                      ChoiceChip(
-                                        avatar: Icon(
-                                          categoryIcon(c.iconKey),
-                                          size: 18,
-                                          color: categoryColor(c.colorHex),
-                                        ),
-                                        label: Text(c.name),
-                                        selected: _categoryId == c.id,
-                                        onSelected: _saving
-                                            ? null
-                                            : (_) {
-                                                setState(() {
-                                                  _categoryId = c.id;
-                                                  _categoryError = null;
-                                                });
-                                                FocusManager
-                                                    .instance
-                                                    .primaryFocus
-                                                    ?.unfocus();
-                                              },
-                                      ),
-                                  ],
-                                ),
-                              ],
-                            ],
-                          );
-                        },
-                      ),
-                      if (_categoryError != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Text(
-                            _categoryError!,
-                            style: TextStyle(color: theme.colorScheme.error),
-                          ),
-                        ),
                       const SizedBox(height: 20),
                       Text('Fecha', style: theme.textTheme.titleMedium),
                       const SizedBox(height: 8),
@@ -430,57 +388,169 @@ class _NewTransactionPageState extends ConsumerState<NewTransactionPage> {
                     ],
                   ),
                 ),
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 150),
-                  curve: Curves.easeOut,
-                  child: keyboardOpen
-                      ? const SizedBox.shrink()
-                      : Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                          child: Column(
-                            children: [
-                              SizedBox(
-                                width: double.infinity,
-                                height: 52,
-                                child: FilledButton(
-                                  onPressed: _saving ? null : _saveAndClose,
-                                  child: _saving
-                                      ? const SizedBox(
-                                          height: 20,
-                                          width: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                          ),
-                                        )
-                                      : Text(
-                                          _isEditing
-                                              ? 'Guardar cambios'
-                                              : 'Guardar',
-                                        ),
-                                ),
-                              ),
-                              if (!_isEditing) ...[
-                                const SizedBox(height: 8),
-                                SizedBox(
-                                  width: double.infinity,
-                                  height: 48,
-                                  child: OutlinedButton(
-                                    onPressed: _saving
-                                        ? null
-                                        : _saveAndAddAnother,
-                                    child: const Text('Guardar y agregar otro'),
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
+                _BottomActions(
+                  saving: _saving,
+                  isEditing: _isEditing,
+                  onSave: _saveAndClose,
+                  onSaveAndAddAnother: _saveAndAddAnother,
                 ),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Icono circular con el nombre debajo, como una categoría de billetera.
+/// Al tocarla se resalta con el color de la categoría.
+class _CategoryIconButton extends StatelessWidget {
+  const _CategoryIconButton({
+    required this.category,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final FinanceCategory category;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = categoryColor(category.colorHex);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: SizedBox(
+        width: 76,
+        child: Column(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: selected ? color : color.withValues(alpha: 0.15),
+                border: selected
+                    ? Border.all(color: color, width: 2)
+                    : null,
+              ),
+              child: Icon(
+                categoryIcon(category.iconKey),
+                color: selected ? Colors.white : color,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              category.name,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: selected ? FontWeight.w600 : null,
+                color: selected ? theme.colorScheme.primary : null,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Botón "Guardar" de la barra superior, visible solo con el teclado
+/// abierto. Es su propio widget para que solo él (y no todo el
+/// formulario) se reconstruya en cada fotograma de la animación del
+/// teclado.
+class _SaveAppBarAction extends StatelessWidget {
+  const _SaveAppBarAction({required this.saving, required this.onSave});
+
+  final bool saving;
+  final VoidCallback onSave;
+
+  @override
+  Widget build(BuildContext context) {
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 150),
+      transitionBuilder: (child, animation) =>
+          FadeTransition(opacity: animation, child: child),
+      child: keyboardOpen
+          ? Padding(
+              key: const ValueKey('save'),
+              padding: const EdgeInsets.only(right: 8),
+              child: FilledButton(
+                onPressed: saving ? null : onSave,
+                child: const Text('Guardar'),
+              ),
+            )
+          : const SizedBox(key: ValueKey('empty')),
+    );
+  }
+}
+
+/// Botones "Guardar" y "Guardar y agregar otro" de abajo, ocultos con el
+/// teclado abierto. Aislado en su propio widget por la misma razón que
+/// [_SaveAppBarAction].
+class _BottomActions extends StatelessWidget {
+  const _BottomActions({
+    required this.saving,
+    required this.isEditing,
+    required this.onSave,
+    required this.onSaveAndAddAnother,
+  });
+
+  final bool saving;
+  final bool isEditing;
+  final VoidCallback onSave;
+  final VoidCallback onSaveAndAddAnother;
+
+  @override
+  Widget build(BuildContext context) {
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 150),
+      curve: Curves.easeOut,
+      child: keyboardOpen
+          ? const SizedBox.shrink()
+          : Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+              child: Column(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: FilledButton(
+                      onPressed: saving ? null : onSave,
+                      child: saving
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(isEditing ? 'Guardar cambios' : 'Guardar'),
+                    ),
+                  ),
+                  if (!isEditing) ...[
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: OutlinedButton(
+                        onPressed: saving ? null : onSaveAndAddAnother,
+                        child: const Text('Guardar y agregar otro'),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
     );
   }
 }
